@@ -14,7 +14,7 @@ Golden Path 已实现：
 
 Pool Path 已实现：
 
-`Commitment Detail → 模拟时间流逝 → M02 沉下去 → Relationship 连续页 → 看看池底 → 选择星星 → 捞起来 → M03 → 还在`
+`Commitment Detail → 模拟时间流逝 → M02 沉下去 → Relationship 连续页 → 看看池底 → 选择星星 → 捞起来 → M03 → Commitment Detail`
 
 “捞起来”只改变 Visibility `SUNK → SURFACED`；“还想”只新增 `WANT_STILL` Signal。两者互不代替，也都不会自动进入“来真的”。
 

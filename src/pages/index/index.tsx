@@ -41,7 +41,7 @@ export default function Index() {
     setCommitment({ ...commitment, visibilityState: 'SURFACED' })
     setPoolSelected(false)
     setScreen('surfaceMagic')
-    setTimeout(() => setScreen('relationship'), 1600)
+    setTimeout(() => setScreen('detail'), 1600)
   }
   const wantStill = () => {
     if (!commitment || commitment.signals.some(signal => signal.actorId === 'yuki' && signal.type === 'WANT_STILL')) return

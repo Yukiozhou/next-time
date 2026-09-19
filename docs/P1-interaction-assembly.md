@@ -45,7 +45,7 @@ visibilityState: SUNK → SURFACED
 sharedState: SHARED（不变）
 ```
 
-随后播放 M03，原话回到“还在”。这一步不新增 Signal。
+随后播放 M03，原话回到“还在”，并进入该 Commitment 的 Detail。这一步不新增 Signal。
 
 “还想”是另一个独立动作：
 
