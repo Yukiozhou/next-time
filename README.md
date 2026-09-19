@@ -75,6 +75,7 @@ docs/              # P0/P1 冻结共识与测试计划
 - [Visual Master / Design DNA](docs/P1-design-dna.md)
 - [Interaction Assembly](docs/P1-interaction-assembly.md)
 - [User Test Plan](docs/P1-user-test-plan.md)
+- [Round 01 Readiness](docs/P1-round-01-readiness.md)
 - [Security Baseline](docs/SECURITY.md)
 
 ## 版本路线
