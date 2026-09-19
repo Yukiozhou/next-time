@@ -4,10 +4,10 @@
 
 1. **我们**：空状态只露出一句解释、一颗淡星和“说一个下次”。
 2. **说一个下次**：记录原话，42 字以内；不把它包装成任务。
-3. **可选补充**：允许留下一点心情，可直接跳过。
-4. **说给谁听**：选中 Relationship 中的另一个人。
+3. **可选补充**：图片、大概时间、大概地点三个轻入口，可直接跳过；不提供情绪日记框。
+4. **说给谁听**：首次不建立内部联系人列表，直接“发给微信朋友”；已存在 Relationship 时才预绑定 TA。
 5. **微信分享模拟**：`platform/mock` 返回送达结果；真实微信实现将替换 adapter。
-6. **算数吗**：切换为接收者视角；解释双方确认的含义，并允许“这次不算”。
+6. **算数吗**：切换为接收者视角；Round 01 不提前解释“算数”的答案，只保留原话与选择。
 7. **M01 星星触水**：状态成功后播放，表达“落进两个人之间”。
 8. **我和 TA**：新 Commitment 出现在“还在”，不直接揭示完整魔法世界。
 9. **Commitment Detail**：原话、关系、时间线是主结构；后续进入还想/来真的。
@@ -15,9 +15,9 @@
 ## 扩展装配
 
 ```text
-Relationship
+Relationship（连续页面，不是 Tab）
 ├─ 还在：SURFACED
-├─ 池：SUNK
+├─ 看看池底 → Pool：SUNK
 └─ 后来：FULFILLED / LET_GO / DECLINED / WITHDRAWN
 
 Commitment Detail
@@ -38,15 +38,24 @@ visibilityState: SURFACED → SUNK
 
 M02 之后该 Commitment 离开“还在”并进入“池”。池不是失败区，也不修改共同事实。
 
-用户在池中打开 Detail 并点击“我还想”时：
+池中先选择星星，再决定是否“捞起来”：
 
 ```text
-signals += WANT_STILL(actor=Yuki, visibility=SHARED)
 visibilityState: SUNK → SURFACED
 sharedState: SHARED（不变）
 ```
 
-随后播放 M03，原话回到“还在”。“还想”只表达当前态度，不创建 RealityAttempt，也不等于“来真的”。
+随后播放 M03，原话回到“还在”。这一步不新增 Signal。
+
+“还想”是另一个独立动作：
+
+```text
+signals += WANT_STILL(actor=Yuki, visibility=SHARED)
+visibilityState（不变）
+sharedState（不变）
+```
+
+因此“捞起来”不代表用户仍想做，“还想”也不会自动移动 Commitment，更不等于“来真的”。
 
 ## 异常装配
 
