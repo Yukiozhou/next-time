@@ -4,7 +4,7 @@
 
 「下次一定」不是任务管理器，也不催人完成计划。一个人说出一句以后；只有另一个人也说“算数”，它才成为两个人共同的 `Commitment`。时间可以让它浮起、沉进池里、真的发生，或安静地成为后来。
 
-这是产品长期主仓库，不是一次性演示。当前版本为 **High-fi Prototype V3 · Alpha 01**：先通过 H5 验证体验，领域模型与页面结构会继续演进到微信小程序。
+这是产品长期主仓库，不是一次性演示。当前版本为 **High-fi Prototype V3 · Alpha 02**：先通过 H5 验证体验，领域模型与页面结构会继续演进到微信小程序。
 
 ## 当前可体验
 
@@ -12,7 +12,11 @@ Golden Path 已实现：
 
 `我们 → 说一个下次 → 可选补充 → 说给谁听 → 微信分享模拟 → 算数吗 → M01 星星触水 → 我和 TA → Commitment Detail`
 
-后续状态已进入领域模型与页面信息架构：池、还想、来真的、兑现、算啦、后来。
+Pool Path 已实现：
+
+`Commitment Detail → 模拟时间流逝 → M02 沉下去 → 池 → 我还想 → M03 捞起来 → Commitment Detail`
+
+“还想”会新增 `WANT_STILL` Signal；若原话位于池中，则只改变 Visibility `SUNK → SURFACED`，不会进入“来真的”。后续仍将扩展来真的、兑现、算啦与后来。
 
 ## 开始运行
 
@@ -69,8 +73,8 @@ docs/              # P0/P1 冻结共识与测试计划
 
 ## 版本路线
 
-- `v0.1`：Golden Path / Say & 算数（当前）
-- `v0.2`：池 + WANT_STILL
+- `v0.1`：Golden Path / Say & 算数
+- `v0.2`：池 + WANT_STILL（当前）
 - `v0.3`：Reality Flow
 - `v0.4`：Later + Relationship Boundary
 - `v0.5`：P1 User Test Revision

@@ -27,6 +27,27 @@ Commitment Detail
 └─ 算啦：LET_GO
 ```
 
+## Alpha 02｜池与还想
+
+原型测试工具可模拟时间流逝；它执行的唯一领域变化是：
+
+```text
+sharedState: SHARED（不变）
+visibilityState: SURFACED → SUNK
+```
+
+M02 之后该 Commitment 离开“还在”并进入“池”。池不是失败区，也不修改共同事实。
+
+用户在池中打开 Detail 并点击“我还想”时：
+
+```text
+signals += WANT_STILL(actor=Yuki, visibility=SHARED)
+visibilityState: SUNK → SURFACED
+sharedState: SHARED（不变）
+```
+
+随后播放 M03，原话回到“还在”。“还想”只表达当前态度，不创建 RealityAttempt，也不等于“来真的”。
+
 ## 异常装配
 
 - 分享失败：留在分享页，说明未送出，可重试。
