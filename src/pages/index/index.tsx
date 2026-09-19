@@ -4,7 +4,7 @@ import { mockShareAdapter } from '../../platform/share'
 import type { Commitment } from '../../domain/models'
 import './index.scss'
 
-type Screen = 'home' | 'say' | 'context' | 'share' | 'answer' | 'magic' | 'relationship' | 'detail' | 'pool' | 'sinkMagic' | 'surfaceMagic'
+type Screen = 'home' | 'say' | 'context' | 'share' | 'answer' | 'declined' | 'magic' | 'relationship' | 'detail' | 'pool' | 'sinkMagic' | 'surfaceMagic'
 type ContextKey = 'photo' | 'time' | 'place'
 const goldenSteps: Screen[] = ['home', 'say', 'context', 'share', 'answer', 'magic', 'relationship', 'detail']
 
@@ -29,6 +29,10 @@ export default function Index() {
     setCommitment({ id: 'commitment-alpha-03', relationshipId: 'yuki-alin', words, createdBy: 'yuki', sharedState: 'SHARED', visibilityState: 'SURFACED', signals: [], createdAt: new Date().toISOString(), sharedAt: new Date().toISOString() })
     setScreen('magic')
     setTimeout(() => setScreen('relationship'), 2100)
+  }
+  const decline = () => {
+    setCommitment(null)
+    setScreen('declined')
   }
   const sinkForPrototype = () => {
     if (!commitment || commitment.visibilityState !== 'SURFACED') return
@@ -67,7 +71,9 @@ export default function Index() {
 
       {screen === 'share' && <View className='screen share-screen'><Text className='eyebrow'>说给谁听？</Text><Text className='share-quote'>{words}</Text><Text className='hint'>发给那个你想到的人。</Text><View className='wechat-card'><View className='share-wash' /><Text className='hollow-star'>☆</Text><Text className='card-kicker'>Yuki 说了一个下次</Text><Text className='card-quote'>“{words}”</Text><Text className='waiting-copy'>等你说算数。</Text><View className='card-footer'><Text>下次一定</Text><Text>打开看看 ›</Text></View></View><View className='spacer' /><Button className='wechat' loading={sending} onClick={share}>{sending ? '正在打开微信' : '发给微信朋友'}</Button></View>}
 
-      {screen === 'answer' && <View className='screen answer-screen'><View className='perspective'><Text>微信分享模拟 · 接收方视角</Text></View><Text className='eyebrow'>YUKI 说了一个下次</Text><Text className='quote'>“{words}”</Text>{(context.time || context.place) && <View className='context-preview'>{context.time && <Text>大概：天气暖一点</Text>}{context.place && <Text>地点：海边</Text>}</View>}<View className='answer-copy'><Text className='title'>算数吗？</Text></View><View className='spacer' /><Button className='primary' onClick={accept}>算数</Button><Button className='text-button'>这次不算</Button></View>}
+      {screen === 'answer' && <View className='screen answer-screen'><View className='perspective'><Text>微信分享模拟 · 接收方视角</Text></View><Text className='eyebrow'>YUKI 说了一个下次</Text><Text className='quote'>“{words}”</Text>{(context.time || context.place) && <View className='context-preview'>{context.time && <Text>大概：天气暖一点</Text>}{context.place && <Text>地点：海边</Text>}</View>}<View className='answer-copy'><Text className='title'>算数吗？</Text></View><View className='spacer' /><Button className='primary' onClick={accept}>算数</Button><Button className='text-button' onClick={decline}>这次不算</Button></View>}
+
+      {screen === 'declined' && <View className='screen declined-screen'><Text className='eyebrow'>这一次</Text><View className='declined-mark'><Text>☆</Text><View className='declined-line' /></View><Text className='title'>这次不算。</Text><Text className='hint'>这句话没有成为你们共同的以后。</Text><Text className='declined-note'>Yuki 会知道这次没有算数。你不需要说明原因。</Text><View className='spacer' /><Button className='secondary' onClick={() => setScreen('home')}>回到首页</Button></View>}
 
       {screen === 'magic' && <View className='screen magic' aria-live='polite'><View className='light-world'><View className='shallow-water' /><View className='falling-star'>✦</View><View className='ripple r1' /><View className='ripple r2' /></View><Text className='magic-title'>我们说好了。</Text><Text className='magic-sub'>这句话，留在了你们之间。</Text></View>}
 
@@ -80,6 +86,6 @@ export default function Index() {
 
       {screen === 'detail' && <View className='screen detail'><Text className='eyebrow'>我们说好的</Text><Text className='detail-quote'>{words}</Text><Text className='relationship-link'>我和阿琳</Text><View className='detail-star'>✦</View><View className='timeline'><Text className='timeline-title'>这句话的后来</Text><View className='event'><Text className='dot'>•</Text><View><Text>Yuki 说了这句话。</Text><Text className='date'>今天 · 09:41</Text></View></View><View className='event'><Text className='dot gold'>•</Text><View><Text>阿琳：算数。</Text><Text className='date'>刚刚</Text></View></View>{commitment?.signals.map(signal => <View className='event' key={signal.id}><Text className='dot apricot'>•</Text><View><Text>Yuki：还想。</Text><Text className='date'>刚刚</Text></View></View>)}</View>{signalFeedback && <Text className='signal-feedback'>已经留下：你还想。</Text>}<View className='spacer' /><Button className='secondary' onClick={wantStill}>{commitment?.signals.length ? '还想 · 已留下' : '还想'}</Button><Button className='primary disabled-preview'>来真的</Button><Text className='preview-label'>“还想”只表达现在的态度，不会移动这句话</Text></View>}
     </View>
-    <View className='prototype-rail'><Text className='rail-title'>V3 · ALPHA 03</Text><Text>{stepIndex >= 0 ? `${String(stepIndex + 1).padStart(2, '0')} / ${String(goldenSteps.length).padStart(2, '0')}` : screen === 'surfaceMagic' ? 'POOL · M03' : screen === 'sinkMagic' ? 'POOL · M02' : 'V3 · SPACE'}</Text><View className='rail-track'><View className='rail-progress' style={{ height: `${stepIndex >= 0 ? ((stepIndex + 1) / goldenSteps.length) * 100 : 100}%` }} /></View>{commitment?.visibilityState === 'SURFACED' && screen !== 'surfaceMagic' && <Button className='rail-simulate' onClick={sinkForPrototype}>模拟时间流逝</Button>}<Button className='rail-reset' onClick={() => { setCommitment(null); setPoolSelected(false); setScreen('home') }}>重新开始</Button></View>
+    <View className='prototype-rail'><Text className='rail-title'>V3 · ALPHA 03</Text><Text>{stepIndex >= 0 ? `${String(stepIndex + 1).padStart(2, '0')} / ${String(goldenSteps.length).padStart(2, '0')}` : screen === 'declined' ? 'PROPOSAL · DECLINED' : screen === 'surfaceMagic' ? 'POOL · M03' : screen === 'sinkMagic' ? 'POOL · M02' : 'V3 · SPACE'}</Text><View className='rail-track'><View className='rail-progress' style={{ height: `${stepIndex >= 0 ? ((stepIndex + 1) / goldenSteps.length) * 100 : 100}%` }} /></View>{commitment?.visibilityState === 'SURFACED' && screen !== 'surfaceMagic' && <Button className='rail-simulate' onClick={sinkForPrototype}>模拟时间流逝</Button>}<Button className='rail-reset' onClick={() => { setCommitment(null); setPoolSelected(false); setScreen('home') }}>重新开始</Button></View>
   </View>
 }
