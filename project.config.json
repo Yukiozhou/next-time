@@ -1,0 +1,8 @@
+{
+  "miniprogramRoot": "dist/",
+  "projectname": "next-time",
+  "description": "下次一定",
+  "appid": "touristappid",
+  "setting": { "urlCheck": false, "es6": true, "minified": true },
+  "compileType": "miniprogram"
+}
