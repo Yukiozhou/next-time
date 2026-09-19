@@ -164,7 +164,7 @@ export default function Index() {
       {screen === 'surfaceMagic' && <View className='screen pool-magic surface-magic' aria-live='polite'><View className='pool-scene'><BrandStar className='rising-star' /><View className='soft-water w1' /><View className='soft-water w2' /></View><Text className='pool-magic-title'>捞起来了。</Text><Text className='pool-magic-sub'>它重新回到了你们的日常里。</Text></View>}
 
       {screen === 'relationship' && <View className='screen relationship'>
-        <View className='relationship-heading'><Text className='title'>我和阿琳</Text><Button className='boundary-link' onClick={() => setScreen('relationshipSettings')}>关系边界</Button></View>
+        <View className='relationship-heading'><Text className='title'>我和阿琳</Text><Button className='boundary-link' aria-label='关系边界' onClick={() => setScreen('relationshipSettings')}>···</Button></View>
         <Text className='hint'>这里留着一些我们说过的话。</Text>
         {relationship.visibilityByPerson.yuki === 'HIDDEN' && <Text className='boundary-banner'>这段关系已从你的首页收起，历史仍然留在这里。</Text>}
         {!relationship.acceptsNewProposalsByPerson.yuki && <Text className='boundary-banner'>你目前不接收阿琳新的“下次”。</Text>}
@@ -183,7 +183,7 @@ export default function Index() {
         <View className='spacer' /><Text className='boundary-footnote'>收起关系不等于算啦；拒收新提议也不会结束任何一条已经算数的话。</Text>
       </View>}
 
-      {screen === 'pool' && <View className='screen pool-screen'><Text className='eyebrow'>我和阿琳</Text><Text className='title'>池</Text><Text className='hint'>有些以后，只是暂时沉到了时间里。</Text><View className={poolSelected ? 'spatial-pool has-selection' : 'spatial-pool'}>{commitment?.visibilityState === 'SUNK' && <Button className='pool-star-button' aria-label='查看沉下去的那句话' onClick={() => setPoolSelected(true)}><BrandStar className='real-star' /></Button>}{poolSelected && <View className='pool-selection'><Text className='selected-words'>{words}</Text><Text className='selected-meta'>这句话一直都在。</Text><Button className='lift-button' onClick={liftFromPool}>捞起来</Button><Button className='look-button' onClick={() => setPoolSelected(false)}>再看看</Button></View>}{commitment?.visibilityState !== 'SUNK' && <Text className='pool-empty-copy'>池里现在很安静。{`\n`}还没有什么沉到这里。</Text>}</View></View>}
+      {screen === 'pool' && <View className='screen pool-screen'><Text className='eyebrow'>我和阿琳</Text><Text className='title'>池</Text><Text className='hint'>有些以后，只是暂时沉到了时间里。</Text><View className={poolSelected ? 'spatial-pool has-selection' : 'spatial-pool'}>{commitment?.visibilityState === 'SUNK' && <Button className='pool-star-button' aria-label='查看沉下去的那句话' onClick={() => setPoolSelected(true)}><BrandStar className='real-star' /></Button>}{poolSelected && <><View className='pool-selection-fog' /><View className='pool-selection'><Text className='selected-words'>{words}</Text><Text className='selected-meta'>这句话一直都在。</Text><Button className='lift-button' onClick={liftFromPool}>捞起来</Button><Button className='look-button' onClick={() => setPoolSelected(false)}>再看看</Button></View></>}{commitment?.visibilityState !== 'SUNK' && <Text className='pool-empty-copy'>池里现在很安静。{`\n`}还没有什么沉到这里。</Text>}</View></View>}
 
       {screen === 'detail' && <View className='screen detail'>
         <View className='detail-heading'><Text className='eyebrow'>{commitment?.sharedState === 'REAL' ? '正在来真的' : commitment?.sharedState === 'FULFILLED' ? '已经兑现' : commitment?.sharedState === 'LET_GO' ? '已经算啦' : '我们说好的'}</Text>{(commitment?.sharedState === 'FULFILLED' || commitment?.sharedState === 'LET_GO') && <Text className='state-chip'>后来</Text>}</View>
