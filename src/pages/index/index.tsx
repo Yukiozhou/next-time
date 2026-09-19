@@ -1,12 +1,22 @@
 import { useState } from 'react'
 import { Button, Text, Textarea, View } from '@tarojs/components'
 import { mockShareAdapter } from '../../platform/share'
-import type { Commitment } from '../../domain/models'
+import type { Commitment, RealityAttempt, RealityEventType } from '../../domain/models'
+import { openSharedStates, resolvedSharedStates } from '../../domain/models'
 import './index.scss'
 
-type Screen = 'home' | 'say' | 'context' | 'share' | 'answer' | 'declined' | 'magic' | 'relationship' | 'detail' | 'pool' | 'sinkMagic' | 'surfaceMagic'
+type Screen = 'home' | 'say' | 'context' | 'share' | 'answer' | 'declined' | 'magic' | 'relationship' | 'detail' | 'realAnswer' | 'fulfillAnswer' | 'pool' | 'sinkMagic' | 'surfaceMagic'
 type ContextKey = 'photo' | 'time' | 'place'
 const goldenSteps: Screen[] = ['home', 'say', 'context', 'share', 'answer', 'magic', 'relationship', 'detail']
+const realityEventCopy: Record<RealityEventType, string> = {
+  PROPOSED: 'Yuki：要不要来真的？',
+  ACCEPTED: '阿琳：好，来真的。',
+  DECLINED: '阿琳：这次先不来真的。',
+  DID_NOT_HAPPEN: '这一次又没成。',
+  FULFILLMENT_PROPOSED: 'Yuki：这次兑现了吗？',
+  FULFILLMENT_CONFIRMED: '阿琳：算兑现。',
+  FULFILLMENT_NOT_YET: '阿琳：这次还没有兑现。'
+}
 
 export default function Index() {
   const [screen, setScreen] = useState<Screen>('home')
@@ -26,7 +36,7 @@ export default function Index() {
     if (result.delivered) setScreen('answer')
   }
   const accept = () => {
-    setCommitment({ id: 'commitment-alpha-03', relationshipId: 'yuki-alin', words, createdBy: 'yuki', sharedState: 'SHARED', visibilityState: 'SURFACED', signals: [], createdAt: new Date().toISOString(), sharedAt: new Date().toISOString() })
+    setCommitment({ id: 'commitment-alpha-03', relationshipId: 'yuki-alin', words, createdBy: 'yuki', sharedState: 'SHARED', visibilityState: 'SURFACED', signals: [], realityAttempts: [], createdAt: new Date().toISOString(), sharedAt: new Date().toISOString() })
     setScreen('magic')
     setTimeout(() => setScreen('relationship'), 2100)
   }
@@ -53,17 +63,68 @@ export default function Index() {
     setSignalFeedback(true)
     setTimeout(() => setSignalFeedback(false), 1800)
   }
+  const replaceLatestAttempt = (attempt: RealityAttempt) => {
+    if (!commitment) return []
+    return commitment.realityAttempts.map(item => item.id === attempt.id ? attempt : item)
+  }
+  const startReality = () => {
+    if (!commitment || commitment.sharedState !== 'SHARED') return
+    const proposedAt = new Date().toISOString()
+    const attempt: RealityAttempt = { id: `reality-${Date.now()}`, proposedBy: 'yuki', state: 'PENDING', proposedAt, events: [{ type: 'PROPOSED', actorId: 'yuki', createdAt: proposedAt }] }
+    setCommitment({ ...commitment, sharedState: 'REAL_PENDING', realityAttempts: [...commitment.realityAttempts, attempt] })
+    setScreen('realAnswer')
+  }
+  const answerReality = (accepted: boolean) => {
+    if (!commitment || commitment.sharedState !== 'REAL_PENDING') return
+    const latest = commitment.realityAttempts[commitment.realityAttempts.length - 1]
+    if (!latest) return
+    const respondedAt = new Date().toISOString()
+    const attempt: RealityAttempt = { ...latest, state: accepted ? 'ACTIVE' : 'DECLINED', respondedAt, events: [...latest.events, { type: accepted ? 'ACCEPTED' : 'DECLINED', actorId: 'alin', createdAt: respondedAt }], ...(!accepted && { resolvedAt: respondedAt }) }
+    setCommitment({ ...commitment, sharedState: accepted ? 'REAL' : 'SHARED', realityAttempts: replaceLatestAttempt(attempt) })
+    setScreen('detail')
+  }
+  const realityDidNotHappen = () => {
+    if (!commitment || commitment.sharedState !== 'REAL') return
+    const latest = commitment.realityAttempts[commitment.realityAttempts.length - 1]
+    if (!latest) return
+    const resolvedAt = new Date().toISOString()
+    const attempt: RealityAttempt = { ...latest, state: 'DID_NOT_HAPPEN', resolvedAt, events: [...latest.events, { type: 'DID_NOT_HAPPEN', actorId: 'yuki', createdAt: resolvedAt }] }
+    setCommitment({ ...commitment, sharedState: 'SHARED', realityAttempts: replaceLatestAttempt(attempt) })
+  }
+  const proposeFulfilled = () => {
+    if (!commitment || commitment.sharedState !== 'REAL') return
+    const latest = commitment.realityAttempts[commitment.realityAttempts.length - 1]
+    if (!latest) return
+    const proposedAt = new Date().toISOString()
+    const attempt: RealityAttempt = { ...latest, state: 'FULFILLED_PENDING', events: [...latest.events, { type: 'FULFILLMENT_PROPOSED', actorId: 'yuki', createdAt: proposedAt }] }
+    setCommitment({ ...commitment, sharedState: 'FULFILLED_PENDING', realityAttempts: replaceLatestAttempt(attempt) })
+    setScreen('fulfillAnswer')
+  }
+  const answerFulfilled = (accepted: boolean) => {
+    if (!commitment || commitment.sharedState !== 'FULFILLED_PENDING') return
+    const latest = commitment.realityAttempts[commitment.realityAttempts.length - 1]
+    if (!latest) return
+    const respondedAt = new Date().toISOString()
+    const attempt: RealityAttempt = { ...latest, state: accepted ? 'FULFILLED' : 'ACTIVE', events: [...latest.events, { type: accepted ? 'FULFILLMENT_CONFIRMED' : 'FULFILLMENT_NOT_YET', actorId: 'alin', createdAt: respondedAt }], ...((accepted ? { resolvedAt: respondedAt } : {})) }
+    setCommitment({ ...commitment, sharedState: accepted ? 'FULFILLED' : 'REAL', visibilityState: accepted ? null : commitment.visibilityState, realityAttempts: replaceLatestAttempt(attempt), ...(accepted && { resolvedAt: new Date().toISOString() }) })
+    setScreen('detail')
+  }
   const back = () => {
     if (screen === 'pool' || screen === 'detail') return setScreen('relationship')
+    if (screen === 'realAnswer' || screen === 'fulfillAnswer') return setScreen('detail')
+    if (screen === 'declined') return setScreen('answer')
     setScreen(goldenSteps[Math.max(0, goldenSteps.indexOf(screen) - 1)])
   }
+
+  const isOpenCommitment = commitment ? openSharedStates.includes(commitment.sharedState) : false
+  const isResolvedCommitment = commitment ? resolvedSharedStates.includes(commitment.sharedState) : false
 
   return <View className='shell'>
     <View className='phone'>
       <View className='statusbar'><Text>9:41</Text><Text className='status-icons'>● ◒</Text></View>
       {!['home', 'magic', 'sinkMagic', 'surfaceMagic'].includes(screen) && <View className='topbar'><Button className='icon-button' onClick={back} aria-label='返回'>‹</Button><Text className='wordmark'>下次一定</Text><View className='topbar-spacer' /></View>}
 
-      {screen === 'home' && <View className='screen home'><View className='brand-row'><Text className='eyebrow'>NEXT TIME · ALPHA 03</Text><Text className='quiet'>•••</Text></View><View className='home-copy'><Text className='display'>我们</Text><Text className='lead'>那些说过的以后，{`\n`}会从这里开始。</Text></View><View className='empty-star'><Text>✦</Text><View className='waterline' /></View><Button className='primary' onClick={() => setScreen('say')}>说一个下次</Button><View className='nav'><Text className='active'>我们</Text><Text>后来</Text><Text>我</Text></View></View>}
+      {screen === 'home' && <View className='screen home'><View className='brand-row'><Text className='eyebrow'>NEXT TIME · ALPHA 04</Text><Text className='quiet'>•••</Text></View><View className='home-copy'><Text className='display'>我们</Text><Text className='lead'>那些说过的以后，{`\n`}会从这里开始。</Text></View><View className='empty-star'><Text>✦</Text><View className='waterline' /></View><Button className='primary' onClick={() => setScreen('say')}>说一个下次</Button><View className='nav'><Text className='active'>我们</Text><Text>后来</Text><Text>我</Text></View></View>}
 
       {screen === 'say' && <View className='screen form-screen'><Text className='eyebrow'>01 · 原话</Text><Text className='title'>说一个下次</Text><Text className='hint'>就写下你真正想对 TA 说的那句话。</Text><View className='field big'><Textarea maxlength={60} value={words} onInput={event => setWords(event.detail.value)} /></View><Text className='counter'>{words.length} / 60</Text><View className='spacer' /><Button className='primary' disabled={!words.trim()} onClick={() => setScreen('context')}>继续</Button></View>}
 
@@ -77,15 +138,19 @@ export default function Index() {
 
       {screen === 'magic' && <View className='screen magic' aria-live='polite'><View className='light-world'><View className='shallow-water' /><View className='falling-star'>✦</View><View className='ripple r1' /><View className='ripple r2' /></View><Text className='magic-title'>我们说好了。</Text><Text className='magic-sub'>这句话，留在了你们之间。</Text></View>}
 
+      {screen === 'realAnswer' && <View className='screen decision-screen'><View className='perspective'><Text>现实尝试模拟 · 阿琳视角</Text></View><Text className='eyebrow'>YUKI 想把这句话带进现实</Text><Text className='quote'>“{words}”</Text><View className='decision-copy'><Text className='title'>要来真的吗？</Text><Text className='hint'>只有你也答应，才会开始这一次现实尝试。</Text></View><View className='spacer' /><Button className='primary' onClick={() => answerReality(true)}>好，来真的</Button><Button className='text-button' onClick={() => answerReality(false)}>这次先不了</Button></View>}
+
+      {screen === 'fulfillAnswer' && <View className='screen decision-screen'><View className='perspective'><Text>兑现确认模拟 · 阿琳视角</Text></View><Text className='eyebrow'>YUKI 说这次已经发生了</Text><Text className='quote'>“{words}”</Text><View className='decision-copy'><Text className='title'>算兑现吗？</Text><Text className='hint'>你们都确认后，它才会成为共同的后来。</Text></View><View className='spacer' /><Button className='primary' onClick={() => answerFulfilled(true)}>算兑现</Button><Button className='text-button' onClick={() => answerFulfilled(false)}>还没有</Button></View>}
+
       {screen === 'sinkMagic' && <View className='screen pool-magic' aria-live='polite'><View className='pool-scene'><View className='sunken-star'>✦</View><View className='soft-water w1' /><View className='soft-water w2' /></View><Text className='pool-magic-title'>它慢慢沉进了池里。</Text><Text className='pool-magic-sub'>没有消失，只是暂时安静下来。</Text></View>}
       {screen === 'surfaceMagic' && <View className='screen pool-magic surface-magic' aria-live='polite'><View className='pool-scene'><View className='rising-star'>✦</View><View className='soft-water w1' /><View className='soft-water w2' /></View><Text className='pool-magic-title'>捞起来了。</Text><Text className='pool-magic-sub'>它重新回到了你们的日常里。</Text></View>}
 
-      {screen === 'relationship' && <View className='screen relationship'><Text className='eyebrow'>RELATIONSHIP</Text><Text className='title'>我和阿琳</Text><Text className='hint'>这里留着一些我们说过的话。</Text><View className='relationship-section'><Text className='section-label'>还在</Text>{commitment?.visibilityState === 'SURFACED' ? <Button className='commitment-row' onClick={() => setScreen('detail')}><Text className='commitment-star'>✦</Text><View className='commitment-copy'><Text className='commitment-words'>{words}</Text><Text className='commitment-status'>{commitment.signals.length ? 'Yuki：还想。' : '我们说好了 · 刚刚'}</Text></View><Text className='chevron'>›</Text></Button> : <Text className='section-empty'>现在没有等着发生的以后。</Text>}</View><Button className='pool-entry' onClick={() => setScreen('pool')}><View><Text className='section-label'>池</Text><Text className='pool-entry-copy'>{commitment?.visibilityState === 'SUNK' ? '有一句话正在池底安静着。' : '池里现在很安静。'}</Text></View><Text>看看池底 →</Text></Button><View className='relationship-section later-section'><Text className='section-label'>后来</Text><Text className='section-empty'>这里还没有后来。</Text></View><View className='spacer' /><Button className='secondary' onClick={() => setScreen('say')}>再说一个下次</Button></View>}
+      {screen === 'relationship' && <View className='screen relationship'><Text className='eyebrow'>RELATIONSHIP</Text><Text className='title'>我和阿琳</Text><Text className='hint'>这里留着一些我们说过的话。</Text><View className='relationship-section'><Text className='section-label'>还在</Text>{isOpenCommitment && commitment?.visibilityState === 'SURFACED' ? <Button className='commitment-row' onClick={() => setScreen('detail')}><Text className='commitment-star'>✦</Text><View className='commitment-copy'><Text className='commitment-words'>{words}</Text><Text className='commitment-status'>{commitment.sharedState === 'REAL' ? '正在来真的。' : commitment.sharedState === 'REAL_PENDING' ? '等阿琳回应“来真的”。' : commitment.sharedState === 'FULFILLED_PENDING' ? '等阿琳确认兑现。' : commitment.signals.length ? 'Yuki：还想。' : '我们说好了 · 刚刚'}</Text></View><Text className='chevron'>›</Text></Button> : <Text className='section-empty'>现在没有等着发生的以后。</Text>}</View><Button className='pool-entry' onClick={() => setScreen('pool')}><View><Text className='section-label'>池</Text><Text className='pool-entry-copy'>{commitment?.visibilityState === 'SUNK' ? '有一句话正在池底安静着。' : '池里现在很安静。'}</Text></View><Text>看看池底 →</Text></Button><View className='relationship-section later-section'><Text className='section-label'>后来</Text>{isResolvedCommitment ? <Button className='commitment-row later-row' onClick={() => setScreen('detail')}><Text className='commitment-star'>✦</Text><View className='commitment-copy'><Text className='commitment-words'>{words}</Text><Text className='commitment-status'>{commitment?.sharedState === 'FULFILLED' ? '我们兑现了。' : '这句话有了后来。'}</Text></View><Text className='chevron'>›</Text></Button> : <Text className='section-empty'>这里还没有后来。</Text>}</View><View className='spacer' /><Button className='secondary' onClick={() => setScreen('say')}>再说一个下次</Button></View>}
 
       {screen === 'pool' && <View className='screen pool-screen'><Text className='eyebrow'>我和阿琳</Text><Text className='title'>池</Text><Text className='hint'>有些以后，只是暂时沉到了时间里。</Text><View className={poolSelected ? 'spatial-pool has-selection' : 'spatial-pool'}>{['d1','d2','d3','d4','d5'].map(dot => <Button key={dot} className={`pool-dot ${dot}`} aria-label='池底的星星' />)}{commitment?.visibilityState === 'SUNK' && <Button className='pool-dot real-star' aria-label='查看沉下去的那句话' onClick={() => setPoolSelected(true)}>✦</Button>}{poolSelected && <View className='pool-selection'><Text className='selected-words'>{words}</Text><Text className='selected-meta'>这句话一直都在。</Text><Button className='lift-button' onClick={liftFromPool}>捞起来</Button><Button className='look-button' onClick={() => setPoolSelected(false)}>再看看</Button></View>}{commitment?.visibilityState !== 'SUNK' && <Text className='pool-empty-copy'>池里现在很安静。{`\n`}还没有什么沉到这里。</Text>}</View></View>}
 
-      {screen === 'detail' && <View className='screen detail'><Text className='eyebrow'>我们说好的</Text><Text className='detail-quote'>{words}</Text><Text className='relationship-link'>我和阿琳</Text><View className='detail-star'>✦</View><View className='timeline'><Text className='timeline-title'>这句话的后来</Text><View className='event'><Text className='dot'>•</Text><View><Text>Yuki 说了这句话。</Text><Text className='date'>今天 · 09:41</Text></View></View><View className='event'><Text className='dot gold'>•</Text><View><Text>阿琳：算数。</Text><Text className='date'>刚刚</Text></View></View>{commitment?.signals.map(signal => <View className='event' key={signal.id}><Text className='dot apricot'>•</Text><View><Text>Yuki：还想。</Text><Text className='date'>刚刚</Text></View></View>)}</View>{signalFeedback && <Text className='signal-feedback'>已经留下：你还想。</Text>}<View className='spacer' /><Button className='secondary' onClick={wantStill}>{commitment?.signals.length ? '还想 · 已留下' : '还想'}</Button><Button className='primary disabled-preview'>来真的</Button><Text className='preview-label'>“还想”只表达现在的态度，不会移动这句话</Text></View>}
+      {screen === 'detail' && <View className='screen detail'><View className='detail-heading'><Text className='eyebrow'>{commitment?.sharedState === 'REAL' ? '正在来真的' : commitment?.sharedState === 'FULFILLED' ? '已经兑现' : '我们说好的'}</Text>{commitment?.sharedState === 'REAL' && <Text className='state-chip'>REAL</Text>}{commitment?.sharedState === 'FULFILLED' && <Text className='state-chip fulfilled'>后来</Text>}</View><Text className='detail-quote'>{words}</Text><Text className='relationship-link'>我和阿琳</Text><View className='detail-star'>✦</View><View className='timeline'><Text className='timeline-title'>这句话的后来</Text><View className='event'><Text className='dot'>•</Text><View><Text>Yuki 说了这句话。</Text><Text className='date'>今天 · 09:41</Text></View></View><View className='event'><Text className='dot gold'>•</Text><View><Text>阿琳：算数。</Text><Text className='date'>刚刚</Text></View></View>{commitment?.signals.map(signal => <View className='event' key={signal.id}><Text className='dot apricot'>•</Text><View><Text>Yuki：还想。</Text><Text className='date'>刚刚</Text></View></View>)}{commitment?.realityAttempts.flatMap(attempt => attempt.events.map((event, index) => <View className='event' key={`${attempt.id}-${index}`}><Text className={event.type === 'FULFILLMENT_CONFIRMED' ? 'dot gold' : 'dot apricot'}>•</Text><View><Text>{realityEventCopy[event.type]}</Text><Text className='date'>刚刚</Text></View></View>))}</View>{signalFeedback && <Text className='signal-feedback'>已经留下：你还想。</Text>}<View className='spacer' />{commitment?.sharedState === 'SHARED' && <><Button className='secondary' onClick={wantStill}>{commitment.signals.length ? '还想 · 已留下' : '还想'}</Button><Button className='primary detail-primary' onClick={startReality}>来真的</Button><Text className='preview-label'>“还想”只表达现在的态度，不会移动这句话</Text></>}{commitment?.sharedState === 'REAL' && <><Button className='secondary' onClick={realityDidNotHappen}>又没成</Button><Button className='primary detail-primary' onClick={proposeFulfilled}>兑现</Button></>}{commitment?.sharedState === 'REAL_PENDING' && <Text className='pending-copy'>等阿琳回应“来真的”。</Text>}{commitment?.sharedState === 'FULFILLED_PENDING' && <Text className='pending-copy'>等阿琳确认是否兑现。</Text>}{commitment?.sharedState === 'FULFILLED' && <Text className='resolved-copy'>这一次，已经成为你们共同的后来。</Text>}</View>}
     </View>
-    <View className='prototype-rail'><Text className='rail-title'>V3 · ALPHA 03</Text><Text>{stepIndex >= 0 ? `${String(stepIndex + 1).padStart(2, '0')} / ${String(goldenSteps.length).padStart(2, '0')}` : screen === 'declined' ? 'PROPOSAL · DECLINED' : screen === 'surfaceMagic' ? 'POOL · M03' : screen === 'sinkMagic' ? 'POOL · M02' : 'V3 · SPACE'}</Text><View className='rail-track'><View className='rail-progress' style={{ height: `${stepIndex >= 0 ? ((stepIndex + 1) / goldenSteps.length) * 100 : 100}%` }} /></View>{commitment?.visibilityState === 'SURFACED' && screen !== 'surfaceMagic' && <Button className='rail-simulate' onClick={sinkForPrototype}>模拟时间流逝</Button>}<Button className='rail-reset' onClick={() => { setCommitment(null); setPoolSelected(false); setScreen('home') }}>重新开始</Button></View>
+    <View className='prototype-rail'><Text className='rail-title'>V3 · ALPHA 04</Text><Text>{stepIndex >= 0 ? `${String(stepIndex + 1).padStart(2, '0')} / ${String(goldenSteps.length).padStart(2, '0')}` : screen === 'declined' ? 'PROPOSAL · DECLINED' : screen === 'surfaceMagic' ? 'POOL · M03' : screen === 'sinkMagic' ? 'POOL · M02' : 'V3 · SPACE'}</Text><View className='rail-track'><View className='rail-progress' style={{ height: `${stepIndex >= 0 ? ((stepIndex + 1) / goldenSteps.length) * 100 : 100}%` }} /></View>{commitment?.sharedState === 'SHARED' && commitment.visibilityState === 'SURFACED' && screen !== 'surfaceMagic' && <Button className='rail-simulate' onClick={sinkForPrototype}>模拟时间流逝</Button>}<Button className='rail-reset' onClick={() => { setCommitment(null); setPoolSelected(false); setScreen('home') }}>重新开始</Button></View>
   </View>
 }

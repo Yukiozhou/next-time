@@ -31,6 +31,12 @@ Commitment Detail
 └─ 算啦：LET_GO
 ```
 
+## Alpha 04｜Reality Flow
+
+“来真的”先进入 `REAL_PENDING`，只有另一方同意才进入 `REAL`。拒绝只结束本次 `RealityAttempt`，Commitment 回到 `SHARED`。
+
+`REAL` 中可以选择“又没成”或“兑现”。“又没成”结束当次尝试并回到 `SHARED`；“兑现”先进入 `FULFILLED_PENDING`，双方确认后才进入 `FULFILLED` 和“后来”。每一次转换都追加事件，不覆盖同一次或过去的 RealityAttempt 历史。
+
 ## Alpha 02｜池与还想
 
 原型测试工具可模拟时间流逝；它执行的唯一领域变化是：

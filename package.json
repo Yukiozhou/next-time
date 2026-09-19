@@ -1,6 +1,6 @@
 {
   "name": "next-time",
-  "version": "0.3.0-alpha.1",
+  "version": "0.3.0-alpha.2",
   "private": true,
   "description": "下次一定：保存两个人之间那些‘以后’的微信小程序",
   "scripts": {

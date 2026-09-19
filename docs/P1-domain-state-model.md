@@ -28,9 +28,9 @@ Relationship 是稳定容器；同一句原话在结束后重新提出，必须�
 
 ```text
 PENDING ──accept──> SHARED ──propose real──> REAL_PENDING ──accept──> REAL
-   │                   │                                            │
-   ├─decline─> DECLINED├─let go──────────────────────────────> LET_GO
-   └─withdraw> WITHDRAWN└─fulfil proposal────────> FULFILLED_PENDING ─accept─> FULFILLED
+   │                   │                         │                    ├─did not happen─> SHARED
+   ├─decline─> DECLINED├─let go─────────────────┴───────────────> LET_GO
+   └─withdraw> WITHDRAWN                                             └─propose fulfilled─> FULFILLED_PENDING ─accept─> FULFILLED
 ```
 
 拒绝现实尝试只结束本次 `RealityAttempt`，Commitment 回到 `SHARED`；它不是 `LET_GO`。
@@ -52,7 +52,7 @@ Visibility 是呈现轴，不得暗改 Shared State。
 
 ## RealityAttempt
 
-现实尝试必须是独立记录，至少包含发起人、双方响应、开始/结束时间和 `ACTIVE | FAILED | FULFILLED | ABANDONED`。多次“又没成”不能覆盖历史。
+现实尝试必须是独立记录，状态为 `PENDING | ACTIVE | DECLINED | DID_NOT_HAPPEN | FULFILLED_PENDING | FULFILLED`。每次转换追加不可覆盖的事件：发起、同意/拒绝、又没成、发起兑现、确认兑现/还没有。多次“又没成”不能覆盖历史。
 
 ## 一致性规则
 

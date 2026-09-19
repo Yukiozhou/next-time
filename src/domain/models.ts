@@ -34,6 +34,39 @@ export interface Signal {
   createdAt: string
 }
 
+export type RealityAttemptState =
+  | 'PENDING'
+  | 'ACTIVE'
+  | 'DECLINED'
+  | 'DID_NOT_HAPPEN'
+  | 'FULFILLED_PENDING'
+  | 'FULFILLED'
+
+export type RealityEventType =
+  | 'PROPOSED'
+  | 'ACCEPTED'
+  | 'DECLINED'
+  | 'DID_NOT_HAPPEN'
+  | 'FULFILLMENT_PROPOSED'
+  | 'FULFILLMENT_CONFIRMED'
+  | 'FULFILLMENT_NOT_YET'
+
+export interface RealityEvent {
+  type: RealityEventType
+  actorId: string
+  createdAt: string
+}
+
+export interface RealityAttempt {
+  id: string
+  proposedBy: string
+  state: RealityAttemptState
+  events: RealityEvent[]
+  proposedAt: string
+  respondedAt?: string
+  resolvedAt?: string
+}
+
 export interface Commitment {
   id: string
   relationshipId: string
@@ -43,6 +76,7 @@ export interface Commitment {
   sharedState: SharedState
   visibilityState: VisibilityState | null
   signals: Signal[]
+  realityAttempts: RealityAttempt[]
   createdAt: string
   sharedAt?: string
   resolvedAt?: string

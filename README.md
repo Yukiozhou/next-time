@@ -4,7 +4,7 @@
 
 「下次一定」不是任务管理器，也不催人完成计划。一个人说出一句以后；只有另一个人也说“算数”，它才成为两个人共同的 `Commitment`。时间可以让它浮起、沉进池里、真的发生，或安静地成为后来。
 
-这是产品长期主仓库，不是一次性演示。当前版本为 **High-fi Prototype V3 · Alpha 03（V3 Visual & UX Alignment）**：先通过 H5 验证体验，领域模型与页面结构会继续演进到微信小程序。
+这是产品长期主仓库，不是一次性演示。当前版本为 **High-fi Prototype V3 · Alpha 04（Reality Flow）**：919 / V3 视觉对齐已经冻结，当前通过 H5 验证现实尝试与关系边界，领域模型与页面结构会继续演进到微信小程序。
 
 ## 当前可体验
 
@@ -17,6 +17,12 @@ Pool Path 已实现：
 `Commitment Detail → 模拟时间流逝 → M02 沉下去 → Relationship 连续页 → 看看池底 → 选择星星 → 捞起来 → M03 → Commitment Detail`
 
 “捞起来”只改变 Visibility `SUNK → SURFACED`；“还想”只新增 `WANT_STILL` Signal。两者互不代替，也都不会自动进入“来真的”。
+
+Reality Flow 已实现：
+
+`Commitment Detail → 来真的 → REAL_PENDING → 双方同意 → REAL → 又没成 / 发起兑现 → FULFILLED_PENDING → 双方确认 → FULFILLED → 后来`
+
+每次现实尝试使用独立 `RealityAttempt` 和追加式事件记录；“又没成”只结束当次尝试并回到 `SHARED`，不会覆盖过去，也不等于 `LET_GO`。
 
 ## 开始运行
 
@@ -75,8 +81,8 @@ docs/              # P0/P1 冻结共识与测试计划
 
 - `v0.1`：Golden Path / Say & 算数
 - `v0.2`：池 + WANT_STILL
-- `v0.3-alpha`：919 / V3 Visual & UX Alignment（当前）
-- `v0.3`：Reality Flow
+- `v0.3-alpha.1`：919 / V3 Visual & UX Alignment
+- `v0.3-alpha.2`：Reality Flow（当前）
 - `v0.4`：Later + Relationship Boundary
 - `v0.5`：P1 User Test Revision
 - `v1.0.0-p1`：P1 Freeze
