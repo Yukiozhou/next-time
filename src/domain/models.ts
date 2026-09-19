@@ -39,6 +39,7 @@ export type RealityAttemptState =
   | 'ACTIVE'
   | 'DECLINED'
   | 'DID_NOT_HAPPEN'
+  | 'ABANDONED'
   | 'FULFILLED_PENDING'
   | 'FULFILLED'
 
@@ -47,6 +48,7 @@ export type RealityEventType =
   | 'ACCEPTED'
   | 'DECLINED'
   | 'DID_NOT_HAPPEN'
+  | 'LET_GO'
   | 'FULFILLMENT_PROPOSED'
   | 'FULFILLMENT_CONFIRMED'
   | 'FULFILLMENT_NOT_YET'

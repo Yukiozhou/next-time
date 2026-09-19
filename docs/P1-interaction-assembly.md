@@ -37,6 +37,12 @@ Commitment Detail
 
 `REAL` 中可以选择“又没成”或“兑现”。“又没成”结束当次尝试并回到 `SHARED`；“兑现”先进入 `FULFILLED_PENDING`，双方确认后才进入 `FULFILLED` 和“后来”。每一次转换都追加事件，不覆盖同一次或过去的 RealityAttempt 历史。
 
+## Alpha 05｜Later 与关系边界
+
+“算啦”针对一条 Commitment，任一方确认后进入 `LET_GO` 并移入“后来”；处于 `REAL` 的 RealityAttempt 同时记为 `ABANDONED`。LET_GO 后的 `WANT_STILL / SELF_ONLY` 只出现在当前用户的时间线里，不恢复共同状态。
+
+“收起这段关系”和“不再接收新提议”位于独立的关系边界页，分别修改当前用户的 `RelationshipVisibility` 与 `acceptsNewProposals`。两个设置可以任意组合，也不会删除或改写共同历史。
+
 ## Alpha 02｜池与还想
 
 原型测试工具可模拟时间流逝；它执行的唯一领域变化是：

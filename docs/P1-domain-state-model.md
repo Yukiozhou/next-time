@@ -52,7 +52,7 @@ Visibility 是呈现轴，不得暗改 Shared State。
 
 ## RealityAttempt
 
-现实尝试必须是独立记录，状态为 `PENDING | ACTIVE | DECLINED | DID_NOT_HAPPEN | FULFILLED_PENDING | FULFILLED`。每次转换追加不可覆盖的事件：发起、同意/拒绝、又没成、发起兑现、确认兑现/还没有。多次“又没成”不能覆盖历史。
+现实尝试必须是独立记录，状态为 `PENDING | ACTIVE | DECLINED | DID_NOT_HAPPEN | ABANDONED | FULFILLED_PENDING | FULFILLED`。每次转换追加不可覆盖的事件：发起、同意/拒绝、又没成、算啦、发起兑现、确认兑现/还没有。多次“又没成”不能覆盖历史。
 
 ## 一致性规则
 

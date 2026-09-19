@@ -4,7 +4,7 @@
 
 「下次一定」不是任务管理器，也不催人完成计划。一个人说出一句以后；只有另一个人也说“算数”，它才成为两个人共同的 `Commitment`。时间可以让它浮起、沉进池里、真的发生，或安静地成为后来。
 
-这是产品长期主仓库，不是一次性演示。当前版本为 **High-fi Prototype V3 · Alpha 04（Reality Flow）**：919 / V3 视觉对齐已经冻结，当前通过 H5 验证现实尝试与关系边界，领域模型与页面结构会继续演进到微信小程序。
+这是产品长期主仓库，不是一次性演示。当前版本为 **High-fi Prototype V3 · Alpha 05（Later & Relationship Boundary）**：919 / V3 视觉对齐与 Reality Flow 已经冻结，当前通过 H5 验证关系边界并准备 Round 01，领域模型与页面结构会继续演进到微信小程序。
 
 ## 当前可体验
 
@@ -82,8 +82,8 @@ docs/              # P0/P1 冻结共识与测试计划
 - `v0.1`：Golden Path / Say & 算数
 - `v0.2`：池 + WANT_STILL
 - `v0.3-alpha.1`：919 / V3 Visual & UX Alignment
-- `v0.3-alpha.2`：Reality Flow（当前）
-- `v0.4`：Later + Relationship Boundary
+- `v0.3-alpha.2`：Reality Flow
+- `v0.4-alpha.1`：Later + Relationship Boundary（当前）
 - `v0.5`：P1 User Test Revision
 - `v1.0.0-p1`：P1 Freeze
 
