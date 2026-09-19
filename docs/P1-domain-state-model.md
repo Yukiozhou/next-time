@@ -5,7 +5,7 @@
 ```text
 Person Yuki ─┐
              ├─ Relationship ─ Commitment ─ Signals / RealityAttempt
-Person 阿琳 ─┘
+Person Jack ─┘
 ```
 
 Relationship 是稳定容器；同一句原话在结束后重新提出，必须创建新的 Commitment，不能复活旧对象。
