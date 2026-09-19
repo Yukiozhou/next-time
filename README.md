@@ -30,6 +30,13 @@ npm run typecheck
 npm run build:h5
 ```
 
+完整本地校验和生产依赖审计：
+
+```bash
+npm run verify
+npm run security:audit
+```
+
 微信小程序构建（接入真实 AppID 与平台能力后）：
 
 ```bash
@@ -58,6 +65,7 @@ docs/              # P0/P1 冻结共识与测试计划
 - [Visual Master / Design DNA](docs/P1-design-dna.md)
 - [Interaction Assembly](docs/P1-interaction-assembly.md)
 - [User Test Plan](docs/P1-user-test-plan.md)
+- [Security Baseline](docs/SECURITY.md)
 
 ## 版本路线
 
@@ -71,3 +79,5 @@ docs/              # P0/P1 冻结共识与测试计划
 ## 状态
 
 Alpha 代码使用本地模拟数据，不应被视为隐私、安全、服务端一致性或微信审核完成。后端状态最终是真相；任何 Magic 都只能在状态提交成功后播放。
+
+开发服务器仅监听 `127.0.0.1`，不得通过改回 `0.0.0.0` 将其直接暴露到局域网或公网。当前上游依赖告警及处理策略见 [Security Baseline](docs/SECURITY.md)。

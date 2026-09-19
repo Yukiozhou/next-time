@@ -16,6 +16,8 @@ export default defineConfig({
     publicPath: '/',
     staticDirectory: 'static',
     output: { filename: 'js/[name].[contenthash:8].js', chunkFilename: 'js/[name].[contenthash:8].js' },
-    devServer: { port: 10086, host: '0.0.0.0' }
+    // Keep the development server local. Exposing it to the LAN would broaden
+    // the impact of upstream development-server vulnerabilities.
+    devServer: { port: 10086, host: '127.0.0.1', allowedHosts: ['localhost', '127.0.0.1'] }
   }
 })
