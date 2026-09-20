@@ -89,4 +89,7 @@ $ivory:#faf7f1;$ink:#263238;$soft:#707679;$tertiary:#a4a3a0;$divider:rgba(38,50,
 
 /* The new mother star keeps an organic silhouette and never sits like a rigid icon. */
 .brand-star{filter:drop-shadow(0 3px 8px rgba(226,181,63,.2));transform-origin:48% 52%}.falling-star,.sunken-star,.rising-star{filter:drop-shadow(0 4px 9px rgba(226,181,63,.25))}
+
+/* Pool enters as atmosphere, not as a rectangular image placed below the copy. */
+.pool-screen>.eyebrow,.pool-screen>.title,.pool-screen>.hint{position:relative;z-index:4}.spatial-pool{margin-top:-16px;padding-top:16px}.pool-fountain-visual{inset:-34px -1px -1px;-webkit-mask-image:linear-gradient(180deg,transparent 0,rgba(0,0,0,.08) 4%,rgba(0,0,0,.34) 10%,rgba(0,0,0,.72) 17%,#000 25%,#000 100%);mask-image:linear-gradient(180deg,transparent 0,rgba(0,0,0,.08) 4%,rgba(0,0,0,.34) 10%,rgba(0,0,0,.72) 17%,#000 25%,#000 100%)}.pool-fountain-light{inset:-34px 0 0;background:linear-gradient(180deg,$ivory 0,rgba(250,247,241,.92) 7%,rgba(250,247,241,.62) 14%,rgba(250,247,241,.2) 23%,rgba(250,247,241,0) 34%,rgba(250,247,241,0) 84%,rgba(250,247,241,.24) 96%),linear-gradient(90deg,rgba(250,247,241,.28) 0,rgba(250,247,241,0) 8%,rgba(250,247,241,0) 92%,rgba(250,247,241,.28) 100%)}
 @media(max-width:620px){.shell{padding:0;background:$ivory}.phone{width:100vw;height:100vh;min-height:620px;border-radius:0;box-shadow:none}.prototype-rail{display:none}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-delay:0ms!important;transition-duration:.01ms!important}}
