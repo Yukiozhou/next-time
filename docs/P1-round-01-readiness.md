@@ -30,10 +30,14 @@ Round 01 的内部工程演练已完成，核心任务与反向分支均可在 H
 
 ## 工程检查
 
-- TypeScript：通过。
-- H5 production build：通过。
-- 视觉走查：首页、M01、Pool、REAL Detail、LET_GO Detail、关系边界页均可读。
-- 当前仅有 Webpack entrypoint 约 299 KiB 的性能提示，不阻塞 Round 01。
+- 2026-09-20 在最新视觉实现上重新执行 `npm run verify`：TypeScript 与 H5 production build 均通过。
+- H5 完整手动走查：Golden Path → Pool → 捞起来 → 还想 → 来真的 → 又没成，以及独立终态分支“兑现 / 算啦”与 Relationship Boundary 均通过；未发现视觉层遮挡点击区或阻断状态转换。
+- `npm run security:audit` 已执行，但未通过：当前 Taro / H5 构建依赖链报告 18 项（11 moderate、1 high、6 critical）。建议修复路径包含 Taro 相关破坏性版本变化，因此不在视觉冻结提交中自动执行 `npm audit fix --force`；作为升级工具链前必须单独处理并回归的工程风险记录。
+- 当前仍有 Webpack entrypoint 约 299 KiB 的性能提示，不阻塞 Round 01。
+
+## 冻结点
+
+当前实现定义为 **V3 Alpha 05 · Round 01 Candidate**。除非 Round 01 用户测试暴露明确问题，否则不再主动调整视觉；新的视觉探索必须在独立方案中评审后再进入正式页面。
 
 ## 正式 Round 01 待执行
 
@@ -46,4 +50,3 @@ Round 01 的内部工程演练已完成，核心任务与反向分支均可在 H
 - 用户是否首次就能区分“捞起来 / 还想 / 来真的”。
 - 用户是否能区分“算啦 / 收起关系 / 不再接收新提议”。
 - M01 是否帮助确认状态，而不是拖慢任务。
-
