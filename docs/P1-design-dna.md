@@ -43,7 +43,7 @@ M03 必须重新看见池沿、花影与水面纹理：池的世界逐渐退去�
 
 ## 同一座 Wishing Fountain
 
-Home、Relationship、M01、Pool、M02 / M03 必须复用同一个环境地标，而不是各画一套水面。固定特征为：奶油灰双层浅石圆池沿、左侧粉白花枝、Monet Sky 天空反射、Pool Aqua 浅水、中央低矮双层泉座与极短水涌。不同页面只改变观察距离、裁切范围和世界浓度。
+Home、Relationship、M01、Pool、M02 / M03 必须复用同一个环境地标，而不是各画一套水面。固定特征为：奶油灰分块浅石圆池沿、右上粉白花枝与石砌花园立面、Monet Sky 天空反射、Pool Aqua 浅水。Pool 以立面中的两股细落水和各自的小圈涟漪建立“许愿池”识别，不使用中央喷泉物体；其他页面只按观察距离选取池沿、水光和花影，不机械复制完整落水场景。
 
 环境层命名固定为 `garden-branch`、`petal-shadow`、`sun-dapple`、`water-reflection`；它们表达花园光影，不承担数据语义。Brand Star 仍严格来自真实 Commitment，只有 Outline Star 可以在明确不代表数据的品牌位置出现。
 
