@@ -93,11 +93,12 @@ $ivory:#faf7f1;$ink:#263238;$soft:#707679;$tertiary:#a4a3a0;$divider:rgba(38,50,
 /* Approved watercolor mother star; scale the artwork without shifting hit areas or motion paths. */
 .brand-star{background:none;filter:none;transform-origin:48% 52%;overflow:visible}
 .brand-star:before{content:"";display:block;width:100%;height:100%;background:url('../../assets/brand-star-watercolor.png') center/140% auto no-repeat;transform:scale(1.55);filter:saturate(1.18) drop-shadow(0 2px 5px rgba(225,180,65,.22));pointer-events:none}
-.detail-star{width:38px;height:38px;margin:24px 8px 30px;opacity:1;flex-shrink:0}
-.commitment-star{flex-basis:30px;width:30px;height:30px;margin-left:5px}
+.detail-star{width:60px;height:60px;margin:28px 14px 34px;opacity:1;flex-shrink:0}
+.detail-star:before{filter:saturate(1.4) contrast(1.08) drop-shadow(0 3px 7px rgba(225,180,65,.26))}
+.commitment-star{flex-basis:40px;width:40px;height:40px;margin-left:8px}
 .share-star{width:28px;height:28px}
-.pool-star-button{width:64px;height:64px;left:calc(39% - 32px)}
-.pool-star-button .real-star{width:48px;height:48px;opacity:.88}
+.pool-star-button{width:80px;height:80px;left:calc(39% - 40px)}
+.pool-star-button .real-star{width:60px;height:60px;opacity:.94}
 .detail-star:before,.commitment-star:before,.pool-window-star:before{animation:watercolorStarFloat 5.6s cubic-bezier(.4,0,.2,1) infinite}
 .pool-star-button .real-star:before{animation:watercolorStarBreathe 4.8s ease-in-out infinite}
 .later-row .commitment-star:before{animation:none}
