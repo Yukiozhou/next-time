@@ -76,6 +76,7 @@ docs/              # P0/P1 冻结共识与测试计划
 - [Interaction Assembly](docs/P1-interaction-assembly.md)
 - [User Test Plan](docs/P1-user-test-plan.md)
 - [Round 01 Readiness](docs/P1-round-01-readiness.md)
+- [Round 01 单场记录](docs/P1-round-01-session-record.md)
 - [Security Baseline](docs/SECURITY.md)
 
 ## 版本路线

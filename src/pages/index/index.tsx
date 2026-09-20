@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button, Text, Textarea, View } from '@tarojs/components'
 import { mockShareAdapter } from '../../platform/share'
 import type { Commitment, RealityAttempt, RealityEventType, Relationship } from '../../domain/models'
@@ -20,17 +20,42 @@ const realityEventCopy: Record<RealityEventType, string> = {
 }
 
 const BrandStar = ({ className = '' }: { className?: string }) => <View className={`brand-star ${className}`} aria-hidden='true' />
+const initialContext = (): Record<ContextKey, boolean> => ({ photo: false, time: false, place: false })
+const initialRelationship = (): Relationship => ({ id: 'yuki-jack', people: [{ id: 'yuki', name: 'Yuki' }, { id: 'jack', name: 'Jack' }], visibilityByPerson: { yuki: 'VISIBLE', jack: 'VISIBLE' }, acceptsNewProposalsByPerson: { yuki: true, jack: true } })
 
 export default function Index() {
   const [screen, setScreen] = useState<Screen>('home')
   const [words, setWords] = useState('下次一起去看海。')
-  const [context, setContext] = useState<Record<ContextKey, boolean>>({ photo: false, time: false, place: false })
+  const [context, setContext] = useState<Record<ContextKey, boolean>>(initialContext)
   const [sending, setSending] = useState(false)
   const [commitment, setCommitment] = useState<Commitment | null>(null)
-  const [relationship, setRelationship] = useState<Relationship>({ id: 'yuki-jack', people: [{ id: 'yuki', name: 'Yuki' }, { id: 'jack', name: 'Jack' }], visibilityByPerson: { yuki: 'VISIBLE', jack: 'VISIBLE' }, acceptsNewProposalsByPerson: { yuki: true, jack: true } })
+  const [relationship, setRelationship] = useState<Relationship>(initialRelationship)
   const [poolSelected, setPoolSelected] = useState(false)
   const [signalFeedback, setSignalFeedback] = useState(false)
+  const transitionTimers = useRef<Array<ReturnType<typeof setTimeout>>>([])
   const stepIndex = goldenSteps.indexOf(screen)
+
+  const schedule = (action: () => void, delay: number) => {
+    const timer = setTimeout(action, delay)
+    transitionTimers.current.push(timer)
+  }
+  const clearScheduledTransitions = () => {
+    transitionTimers.current.forEach(clearTimeout)
+    transitionTimers.current = []
+  }
+  useEffect(() => clearScheduledTransitions, [])
+
+  const resetPrototype = () => {
+    clearScheduledTransitions()
+    setWords('下次一起去看海。')
+    setContext(initialContext())
+    setSending(false)
+    setCommitment(null)
+    setRelationship(initialRelationship())
+    setPoolSelected(false)
+    setSignalFeedback(false)
+    setScreen('home')
+  }
 
   const toggleContext = (key: ContextKey) => setContext(current => ({ ...current, [key]: !current[key] }))
   const share = async () => {
@@ -42,7 +67,7 @@ export default function Index() {
   const accept = () => {
     setCommitment({ id: 'commitment-alpha-03', relationshipId: 'yuki-jack', words, createdBy: 'yuki', sharedState: 'SHARED', visibilityState: 'SURFACED', signals: [], realityAttempts: [], createdAt: new Date().toISOString(), sharedAt: new Date().toISOString() })
     setScreen('magic')
-    setTimeout(() => setScreen('relationship'), 2100)
+    schedule(() => setScreen('relationship'), 2100)
   }
   const decline = () => {
     setCommitment(null)
@@ -52,20 +77,20 @@ export default function Index() {
     if (!commitment || commitment.visibilityState !== 'SURFACED') return
     setCommitment({ ...commitment, visibilityState: 'SUNK' })
     setScreen('sinkMagic')
-    setTimeout(() => setScreen('relationship'), 1500)
+    schedule(() => setScreen('relationship'), 1500)
   }
   const liftFromPool = () => {
     if (!commitment) return
     setCommitment({ ...commitment, visibilityState: 'SURFACED' })
     setPoolSelected(false)
     setScreen('surfaceMagic')
-    setTimeout(() => setScreen('detail'), 1600)
+    schedule(() => setScreen('detail'), 1600)
   }
   const wantStill = (visibility: 'SHARED' | 'SELF_ONLY' = 'SHARED') => {
     if (!commitment || commitment.signals.some(signal => signal.actorId === 'yuki' && signal.type === 'WANT_STILL' && signal.visibility === visibility)) return
     setCommitment({ ...commitment, signals: [...commitment.signals, { id: `signal-${Date.now()}`, type: 'WANT_STILL', actorId: 'yuki', visibility, createdAt: new Date().toISOString() }] })
     setSignalFeedback(true)
-    setTimeout(() => setSignalFeedback(false), 1800)
+    schedule(() => setSignalFeedback(false), 1800)
   }
   const replaceLatestAttempt = (attempt: RealityAttempt) => {
     if (!commitment) return []
@@ -203,6 +228,6 @@ export default function Index() {
         <Text className='eyebrow'>结束这一条共同的以后</Text><Text className='quote'>“{words}”</Text><View className='let-go-copy'><Text className='title'>要算啦吗？</Text><Text className='hint'>它会离开“还在”，留进你们共同的“后来”。这个动作不能在原地撤回。</Text></View><View className='spacer' /><Button className='secondary' onClick={() => setScreen('detail')}>再想想</Button><Button className='let-go-button' onClick={letGo}>算啦</Button>
       </View>}
     </View>
-    <View className='prototype-rail'><Text className='rail-title'>V3 · ALPHA 05</Text><Text>{stepIndex >= 0 ? `${String(stepIndex + 1).padStart(2, '0')} / ${String(goldenSteps.length).padStart(2, '0')}` : screen === 'declined' ? 'PROPOSAL · DECLINED' : screen === 'surfaceMagic' ? 'POOL · M03' : screen === 'sinkMagic' ? 'POOL · M02' : 'V3 · SPACE'}</Text><View className='rail-track'><View className='rail-progress' style={{ height: `${stepIndex >= 0 ? ((stepIndex + 1) / goldenSteps.length) * 100 : 100}%` }} /></View>{commitment?.sharedState === 'SHARED' && commitment.visibilityState === 'SURFACED' && (screen === 'relationship' || screen === 'detail') && <Button className='rail-simulate' onClick={sinkForPrototype}>模拟时间流逝</Button>}<Button className='rail-reset' onClick={() => { setCommitment(null); setPoolSelected(false); setScreen('home') }}>重新开始</Button></View>
+    <View className='prototype-rail'><Text className='rail-title'>V3 · ALPHA 05</Text><Text>{stepIndex >= 0 ? `${String(stepIndex + 1).padStart(2, '0')} / ${String(goldenSteps.length).padStart(2, '0')}` : screen === 'declined' ? 'PROPOSAL · DECLINED' : screen === 'surfaceMagic' ? 'POOL · M03' : screen === 'sinkMagic' ? 'POOL · M02' : 'V3 · SPACE'}</Text><View className='rail-track'><View className='rail-progress' style={{ height: `${stepIndex >= 0 ? ((stepIndex + 1) / goldenSteps.length) * 100 : 100}%` }} /></View>{commitment?.sharedState === 'SHARED' && commitment.visibilityState === 'SURFACED' && (screen === 'relationship' || screen === 'detail') && <Button className='rail-simulate' onClick={sinkForPrototype}>模拟时间流逝</Button>}<Button className='rail-reset' onClick={resetPrototype}>重新开始</Button></View>
   </View>
 }
