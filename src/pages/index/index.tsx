@@ -20,7 +20,7 @@ const realityEventCopy: Record<RealityEventType, string> = {
 }
 
 const BrandStar = ({ className = '' }: { className?: string }) => <View className={`brand-star ${className}`} aria-hidden='true' />
-const WishingFountain = ({ className = '' }: { className?: string }) => <View className={`wishing-fountain ${className}`} aria-hidden='true'><View className='garden-branch' /><View className='petal-shadow' /><View className='fountain-basin'><View className='water-reflection' /><View className='fountain-pedestal'><View className='fountain-spring' /></View><View className='sun-dapple' /></View></View>
+const WishingFountain = ({ className = '' }: { className?: string }) => <View className={`wishing-fountain ${className}`} aria-hidden='true'><View className='garden-branch' /><View className='petal-shadow' /><View className='fountain-basin'><View className='water-reflection' /><View className='fountain-ripple' /><View className='sun-dapple' /></View></View>
 const initialContext = (): Record<ContextKey, boolean> => ({ photo: false, time: false, place: false })
 const initialRelationship = (): Relationship => ({ id: 'yuki-jack', people: [{ id: 'yuki', name: 'Yuki' }, { id: 'jack', name: 'Jack' }], visibilityByPerson: { yuki: 'VISIBLE', jack: 'VISIBLE' }, acceptsNewProposalsByPerson: { yuki: true, jack: true } })
 
