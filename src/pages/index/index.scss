@@ -108,4 +108,10 @@ $ivory:#faf7f1;$ink:#263238;$soft:#707679;$tertiary:#a4a3a0;$divider:rgba(38,50,
 .brand-star.outline-star{background:none;filter:none}
 .brand-star.outline-star:before{opacity:.46;filter:saturate(.55)}
 .falling-star,.sunken-star,.rising-star{filter:none}
+.magic .falling-star{width:76px;height:76px;left:calc(50% - 38px);animation:m01WatercolorTouch 1.05s .3s cubic-bezier(.4,0,.2,1) forwards}
+.magic .falling-star:before{filter:saturate(1.3) contrast(1.05) drop-shadow(0 3px 12px rgba(225,180,65,.26));animation:m01StarUnfold 1.5s .3s ease-in-out both}
+.magic .ripple{width:48px;height:15px;animation-delay:1.08s}
+.m01-fountain .fountain-ripple{display:none}
+@keyframes m01WatercolorTouch{0%{top:calc(57% - 21px);opacity:0;transform:rotate(-7deg)}22%{opacity:1}74%{top:calc(64% - 21px);transform:rotate(2deg)}86%{top:calc(64% - 24px);transform:rotate(0)}100%{top:calc(64% - 21px);opacity:1;transform:rotate(0)}}
+@keyframes m01StarUnfold{0%{transform:scale(1.3)}55%{transform:scale(1.6)}75%{transform:scale(1.48)}100%{transform:scale(1.55)}}
 @media(max-width:620px){.shell{padding:0;background:$ivory}.phone{width:100vw;height:100vh;min-height:620px;border-radius:0;box-shadow:none}.prototype-rail{display:none}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-delay:0ms!important;transition-duration:.01ms!important}}
