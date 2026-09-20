@@ -2,7 +2,7 @@
 
 ## 真理来源
 
-视觉以 **919 UI 第二版**为母版，并叠加 V3 的视觉减法：轻盈日常、明亮印象派浅池、只在关键状态出现一点魔法。禁止回到早期的深绿夜水方案。
+视觉以 **919 UI 第二版**为母版，并叠加 V3 的视觉减法。总方向固定为 **Sunlit Garden × Wishing Fountain × Quiet Everyday（日光花园 × 浅石许愿池 × 轻盈日常）**；禁止回到早期的深绿夜水方案。
 
 ## Token
 
@@ -40,6 +40,12 @@
 Pool 是 919 世界观的主场，必须明显看得出一个明亮、浅浅、被花木包围的石砌圆形许愿池，而不是抽象色块。浅色池沿、水底色、Monet Sky 反射、Rose Petal 花影、Butter 光斑与阳光水纹共同构成空间；原始绘画负责水体与花园材质，布局负责建立清晰池沿，不能呈现普通壁纸感。
 
 M03 必须重新看见池沿、花影与水面纹理：池的世界逐渐退去，星星短距离上浮，最后由 Cloud Ivory 日常界面重新接住。它与 M01 共同形成“沉入时间 / 从时间回来”的动态语法，不做成独立的蓝色转场页。
+
+## 同一座 Wishing Fountain
+
+Home、Relationship、M01、Pool、M02 / M03 必须复用同一个环境地标，而不是各画一套水面。固定特征为：奶油灰双层浅石圆池沿、左侧粉白花枝、Monet Sky 天空反射、Pool Aqua 浅水、中央低矮双层泉座与极短水涌。不同页面只改变观察距离、裁切范围和世界浓度。
+
+环境层命名固定为 `garden-branch`、`petal-shadow`、`sun-dapple`、`water-reflection`；它们表达花园光影，不承担数据语义。Brand Star 仍严格来自真实 Commitment，只有 Outline Star 可以在明确不代表数据的品牌位置出现。
 
 ## Relationship Header
 
