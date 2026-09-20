@@ -43,6 +43,8 @@ M03 必须重新看见池沿、花影与水面纹理：池的世界逐渐退去�
 
 ## 同一座 Wishing Fountain
 
+2026-09-20 用户确认水彩 Star 草图后，Brand Star 使用 `brand-star-watercolor.png` 透明素材：奶油金晕染、自然不对称轮廓与浅 Aqua 映色。通过独立视觉层放大约 25%，保留原点击区域和动画路径；邀请与未成立状态以低透明度、低饱和度呈现。此项为 Round 01 Candidate 冻结后的用户批准变更。
+
 Pool 以 `wishing-fountain-0920-v2.jpg`（0920 Wishing Fountain Visual）为场景母版：浅石池沿、中央花瓣形浅石泉盘、自然溢流、浅亮水面与花影共同建立许愿池识别。禁止再追加中央 CSS fountain object、雕塑或高水柱。Home、Relationship、M01、M02 / M03 复用这套石材、水光、花影与色彩语言，并按观察距离选择局部环境，不机械复制完整 Pool 场景。
 
 所有环境图像必须通过四边渐隐融入 Cloud Ivory，不允许出现矩形贴图边缘。边缘晕染只使用 CSS 自然光、Sky / Aqua / Rose 的低浓度渐变实现，不能拿插图裁片充当渐变。日常页面各自保留轻微不同的光源方向，避免全产品套用同一个渐变模板。
