@@ -43,11 +43,9 @@ M03 必须重新看见池沿、花影与水面纹理：池的世界逐渐退去�
 
 ## 同一座 Wishing Fountain
 
-Home、Relationship、M01、Pool、M02 / M03 必须复用同一个环境地标，而不是各画一套水面。固定特征为：奶油灰双层浅石圆池沿、同一枝原创粉白花枝、Monet Sky 天空反射、Pool Aqua 浅水，以及与池沿同材质、贴近水面的低矮浅石泉眼。泉眼宽约 40–50px、高约 8–12px，只允许中心轻微鼓水或溢水；不得出现柱体、叠石、按钮或图标感。不同页面只改变观察距离、裁切范围和世界浓度。
+Home、Relationship、M01、Pool、M02 / M03 必须复用同一个环境地标，而不是各画一套水面。固定特征为：奶油灰双层浅石圆池沿、左侧粉白花枝、Monet Sky 天空反射、Pool Aqua 浅水、中央低矮双层泉座与极短水涌。不同页面只改变观察距离、裁切范围和世界浓度。
 
-环境层命名固定为 `garden-branch`、`petal-shadow`、`sun-dapple`、`water-reflection`；它们表达花园光影，不承担数据语义。`garden-branch` 必须使用同一份透明原创花枝资产，不再裁切或放大 Pool 背景图冒充花枝。Brand Star 仍严格来自真实 Commitment，只有 Outline Star 可以在明确不代表数据的品牌位置出现。
-
-静态 Home、Relationship 与 Pool 可以保留极慢的 ambient fountain ripple。M01 必须关闭 ambient ripple，只显示星星触水产生的一圈因果水纹；M02 / M03 同样关闭 ambient ripple，只保留沉下或浮起对应的 `soft-water`。同一时刻不得叠加两套无因水纹。
+环境层命名固定为 `garden-branch`、`petal-shadow`、`sun-dapple`、`water-reflection`；它们表达花园光影，不承担数据语义。Brand Star 仍严格来自真实 Commitment，只有 Outline Star 可以在明确不代表数据的品牌位置出现。
 
 ## Relationship Header
 
