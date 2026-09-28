@@ -1,0 +1,73 @@
+name: Round 01 Candidate 2 — Alpha 06
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/round-01-candidate-2.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: round-01-candidate-2-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.publish.outputs.page_url }}
+    steps:
+      - name: Check out frozen Alpha 06 source
+        uses: actions/checkout@v4
+        with:
+          ref: 50f1b9364f6442dcb0a389f278f2e138f311bd46
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set GitHub Pages asset path for this build only
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs')
+          const file = 'config/index.ts'
+          const source = fs.readFileSync(file, 'utf8')
+          const from = "publicPath: '/',"
+          if (!source.includes(from)) throw new Error('Frozen source publicPath changed')
+          fs.writeFileSync(file, source.replace(from, "publicPath: '/next-time/',"))
+          NODE
+
+      - name: Verify and build frozen H5
+        run: npm run verify
+
+      - name: Label the test version
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs')
+          const file = 'dist/index.html'
+          const html = fs.readFileSync(file, 'utf8')
+          fs.writeFileSync(file, html.replace('下次一定 · V3 Alpha', 'Round 01 Candidate 2 — Alpha 06'))
+          NODE
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload frozen build
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+      - name: Publish test link
+        id: publish
+        uses: actions/deploy-pages@v4
