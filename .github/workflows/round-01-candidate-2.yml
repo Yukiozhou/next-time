@@ -1,4 +1,4 @@
-name: Round 01 Candidate 2 — Alpha 06
+name: Round 01 Candidate 2 — Alpha 06.1
 
 on:
   push:
@@ -23,10 +23,10 @@ jobs:
       name: github-pages
       url: ${{ steps.publish.outputs.page_url }}
     steps:
-      - name: Check out frozen Alpha 06 source
+      - name: Check out frozen Alpha 06.1 source
         uses: actions/checkout@v4
         with:
-          ref: 50f1b9364f6442dcb0a389f278f2e138f311bd46
+          ref: de26c962fe16d83a5e24cd31ba2f5c59d3a83359
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -57,7 +57,7 @@ jobs:
           const fs = require('node:fs')
           const file = 'dist/index.html'
           const html = fs.readFileSync(file, 'utf8')
-          fs.writeFileSync(file, html.replace('下次一定 · V3 Alpha', 'Round 01 Candidate 2 — Alpha 06'))
+          fs.writeFileSync(file, html.replace('下次一定 · V3 Alpha', 'Round 01 Candidate 2 — Alpha 06.1'))
           NODE
 
       - name: Configure Pages
