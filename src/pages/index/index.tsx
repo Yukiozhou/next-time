@@ -5,7 +5,7 @@ import type { Commitment, RealityAttempt, RealityEventType, Relationship } from 
 import { openSharedStates, resolvedSharedStates } from '../../domain/models'
 import './index.scss'
 
-type Screen = 'later' | 'me' | 'hiddenPeople' | 'notifications' | 'privacy' | 'about' | 'home' | 'say' | 'context' | 'share' | 'answer' | 'declined' | 'magic' | 'relationship' | 'relationshipSettings' | 'detail' | 'letGoConfirm' | 'realAnswer' | 'fulfillAnswer' | 'pool' | 'sinkMagic' | 'surfaceMagic'
+type Screen = 'later' | 'me' | 'hiddenPeople' | 'notifications' | 'privacy' | 'about' | 'home' | 'say' | 'context' | 'share' | 'answer' | 'incomingAnswer' | 'proposalBlocked' | 'declined' | 'magic' | 'relationship' | 'relationshipSettings' | 'detail' | 'letGoConfirm' | 'realAnswer' | 'fulfillAnswer' | 'pool' | 'sinkMagic' | 'surfaceMagic'
 type ContextKey = 'photo' | 'time' | 'place'
 const goldenSteps: Screen[] = ['home', 'say', 'context', 'share', 'answer', 'magic', 'relationship', 'detail']
 const realityEventCopy: Record<RealityEventType, string> = {
@@ -23,6 +23,7 @@ const BrandStar = ({ className = '' }: { className?: string }) => <View classNam
 const WishingFountain = ({ className = '' }: { className?: string }) => <View className={`wishing-fountain ${className}`} aria-hidden='true'><View className='garden-branch' /><View className='petal-shadow' /><View className='fountain-basin'><View className='water-reflection' /><View className='fountain-ripple' /><View className='sun-dapple' /></View></View>
 const initialContext = (): Record<ContextKey, boolean> => ({ photo: false, time: false, place: false })
 const initialRelationship = (): Relationship => ({ id: 'yuki-jack', people: [{ id: 'yuki', name: 'Yuki' }, { id: 'jack', name: 'Jack' }], visibilityByPerson: { yuki: 'VISIBLE', jack: 'VISIBLE' }, acceptsNewProposalsByPerson: { yuki: true, jack: true } })
+const incomingProposalWords = '下次一起去看一场日落。'
 
 export default function Index() {
   const [screen, setScreen] = useState<Screen>('home')
@@ -74,10 +75,14 @@ export default function Index() {
 
   const toggleContext = (key: ContextKey) => setContext(current => ({ ...current, [key]: !current[key] }))
   const share = async () => {
+    if (sending) return
     setSending(true)
-    const result = await mockShareAdapter.shareProposal({ words, recipient: recipientLocked ? 'Jack' : '微信朋友' })
-    setSending(false)
-    if (result.delivered) setScreen('answer')
+    try {
+      const result = await mockShareAdapter.shareProposal({ words, recipient: recipientLocked ? 'Jack' : '微信朋友' })
+      if (result.delivered) setScreen('answer')
+    } finally {
+      setSending(false)
+    }
   }
   const accept = () => {
     setCommitment({ id: `commitment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, relationshipId: 'yuki-jack', words, createdBy: 'yuki', sharedState: 'SHARED', visibilityState: 'SURFACED', signals: [], realityAttempts: [], createdAt: new Date().toISOString(), sharedAt: new Date().toISOString() })
@@ -86,6 +91,14 @@ export default function Index() {
   }
   const decline = () => {
     setScreen('declined')
+  }
+  const simulateIncomingProposal = () => {
+    setScreen(relationship.acceptsNewProposalsByPerson.yuki ? 'incomingAnswer' : 'proposalBlocked')
+  }
+  const acceptIncomingProposal = () => {
+    setCommitment({ id: `commitment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, relationshipId: 'yuki-jack', words: incomingProposalWords, createdBy: 'jack', sharedState: 'SHARED', visibilityState: 'SURFACED', signals: [], realityAttempts: [], createdAt: new Date().toISOString(), sharedAt: new Date().toISOString() })
+    setScreen('magic')
+    schedule(() => setScreen('relationship'), 2100)
   }
   const sinkForPrototype = () => {
     if (!commitment || commitment.visibilityState !== 'SURFACED') return
@@ -172,6 +185,7 @@ export default function Index() {
     if (['hiddenPeople', 'notifications', 'privacy', 'about'].includes(screen)) return setScreen('me')
     if (screen === 'say') return setScreen(recipientLocked ? 'relationship' : 'home')
     if (screen === 'relationshipSettings') return setScreen('relationship')
+    if (screen === 'incomingAnswer' || screen === 'proposalBlocked') return setScreen('relationship')
     if (screen === 'letGoConfirm') return setScreen('detail')
     if (screen === 'realAnswer' || screen === 'fulfillAnswer') return setScreen('detail')
     if (screen === 'declined') return setScreen('answer')
@@ -209,9 +223,13 @@ export default function Index() {
 
       {screen === 'context' && <View className='screen form-screen'><Text className='eyebrow'>可选补充</Text><Text className='title'>还想多留一点吗？</Text><Text className='hint'>这些只是帮助 TA 理解，不会改变你们要说算数的原话。</Text><View className='context-list'>{([['photo', '一张图片', '已选一张'], ['time', '大概什么时候', '天气暖一点'], ['place', '大概在哪里', '海边']] as const).map(([key, label, value]) => <Button key={key} className={context[key] ? 'context-row selected' : 'context-row'} onClick={() => toggleContext(key)}><Text>＋ {label}</Text><Text>{context[key] ? value : '可选'}</Text></Button>)}</View><View className='spacer' /><Button className='primary' onClick={() => setScreen('share')}>{Object.values(context).some(Boolean) ? '带上这些' : '跳过'}</Button></View>}
 
-      {screen === 'share' && <View className='screen share-screen'><Text className='eyebrow'>{recipientLocked ? '说给 Jack 听' : '说给谁听？'}</Text><Text className='share-quote'>{words}</Text><Text className='hint'>{recipientLocked ? '再留一句话，给 Jack。' : '发给那个你想到的人。'}</Text><View className='wechat-card'><View className='share-wash' /><BrandStar className='outline-star share-star' /><Text className='card-kicker'>Yuki 说了一个下次</Text><Text className='card-quote'>“{words}”</Text><Text className='waiting-copy'>等你说算数。</Text><View className='card-footer'><Text>下次一定</Text><Text>打开看看 ›</Text></View></View><View className='spacer' /><Button className='wechat' loading={sending} onClick={share}>{sending ? '正在打开微信' : recipientLocked ? '发给 Jack' : '发给微信朋友'}</Button></View>}
+      {screen === 'share' && <View className='screen share-screen'><Text className='eyebrow'>{recipientLocked ? '说给 Jack 听' : '说给谁听？'}</Text><Text className='share-quote'>{words}</Text><Text className='hint'>{recipientLocked ? '再留一句话，给 Jack。' : '发给那个你想到的人。'}</Text><View className='wechat-card'><View className='share-wash' /><BrandStar className='outline-star share-star' /><Text className='card-kicker'>Yuki 说了一个下次</Text><Text className='card-quote'>“{words}”</Text><Text className='waiting-copy'>等你说算数。</Text><View className='card-footer'><Text>下次一定</Text><Text>打开看看 ›</Text></View></View><View className='spacer' /><Button className='wechat' disabled={sending} aria-busy={sending} onClick={share}>{recipientLocked ? '发给 Jack' : '发给微信朋友'}</Button></View>}
 
       {screen === 'answer' && <View className='screen answer-screen'><Text className='eyebrow'>Yuki 说了一个下次</Text><Text className='quote'>“{words}”</Text>{(context.time || context.place) && <View className='context-preview'>{context.time && <Text>大概：天气暖一点</Text>}{context.place && <Text>地点：海边</Text>}</View>}<View className='answer-copy'><Text className='title'>算数吗？</Text></View><View className='spacer' /><Button className='primary' onClick={accept}>算数</Button><Button className='text-button' onClick={decline}>这次不算</Button></View>}
+
+      {screen === 'incomingAnswer' && <View className='screen answer-screen'><Text className='eyebrow'>Jack 说了一个下次</Text><Text className='quote'>“{incomingProposalWords}”</Text><View className='answer-copy'><Text className='title'>算数吗？</Text><Text className='hint'>只有你也答应，它才会留在你们之间。</Text></View><View className='spacer' /><Button className='primary' onClick={acceptIncomingProposal}>算数</Button><Button className='text-button' onClick={() => setScreen('relationship')}>这次不算</Button></View>}
+
+      {screen === 'proposalBlocked' && <View className='screen declined-screen'><Text className='eyebrow'>没有送达</Text><View className='declined-mark'><BrandStar className='outline-star declined-star' /><View className='declined-line' /></View><Text className='title'>Yuki 目前没有接收新的“下次”。</Text><Text className='hint'>这句话没有送达，也不会成为新的共同记录。</Text><Text className='declined-note'>已经说好的内容仍然留在你们之间。</Text><View className='spacer' /><Button className='secondary' onClick={() => setScreen('relationship')}>回到我和 Jack</Button></View>}
 
       {screen === 'declined' && <View className='screen declined-screen'><Text className='eyebrow'>这一次</Text><View className='declined-mark'><BrandStar className='outline-star declined-star' /><View className='declined-line' /></View><Text className='title'>这次不算。</Text><Text className='hint'>这句话没有成为你们共同的以后。</Text><Text className='declined-note'>Yuki 会知道这次没有算数。你不需要说明原因。</Text><View className='spacer' /><Button className='secondary' onClick={() => setScreen('home')}>回到首页</Button></View>}
 
@@ -249,7 +267,7 @@ export default function Index() {
       {screen === 'detail' && <View className='screen detail'>
         <View className='detail-heading'><Text className='eyebrow'>{commitment?.sharedState === 'REAL' ? '正在来真的' : commitment?.sharedState === 'FULFILLED' ? '已经兑现' : commitment?.sharedState === 'LET_GO' ? '已经算啦' : '我们说好的'}</Text>{(commitment?.sharedState === 'FULFILLED' || commitment?.sharedState === 'LET_GO') && <Text className='state-chip'>后来</Text>}</View>
         <Text className='detail-quote'>{words}</Text><Text className='relationship-link'>我和 Jack</Text><BrandStar className='detail-star' />
-        <View className='timeline'><Text className='timeline-title'>这句话的后来</Text><View className='event'><Text className='dot'>•</Text><View><Text>Yuki 说了这句话。</Text><Text className='date'>今天 · 09:41</Text></View></View><View className='event'><Text className='dot gold'>•</Text><View><Text>Jack：算数。</Text><Text className='date'>刚刚</Text></View></View>{commitment?.signals.filter(signal => signal.visibility === 'SHARED').map(signal => <View className='event' key={signal.id}><Text className='dot apricot'>•</Text><View><Text>Yuki：还想。</Text><Text className='date'>刚刚</Text></View></View>)}{commitment?.realityAttempts.flatMap(attempt => attempt.events.map((event, index) => <View className='event' key={`${attempt.id}-${index}`}><Text className={event.type === 'FULFILLMENT_CONFIRMED' ? 'dot gold' : 'dot apricot'}>•</Text><View><Text>{realityEventCopy[event.type]}</Text><Text className='date'>刚刚</Text></View></View>))}{commitment?.sharedState === 'LET_GO' && !commitment.realityAttempts.some(attempt => attempt.events.some(event => event.type === 'LET_GO')) && <View className='event'><Text className='dot'>•</Text><View><Text>Yuki：算啦。</Text><Text className='date'>刚刚</Text></View></View>}{commitment?.signals.filter(signal => signal.visibility === 'SELF_ONLY').map(signal => <View className='event' key={signal.id}><Text className='dot apricot'>•</Text><View><Text>只留给你：我还想。</Text><Text className='date'>仅自己可见 · 刚刚</Text></View></View>)}</View>
+        <View className='timeline'><Text className='timeline-title'>这句话的后来</Text><View className='event'><Text className='dot'>•</Text><View><Text>{commitment?.createdBy === 'jack' ? 'Jack' : 'Yuki'} 说了这句话。</Text><Text className='date'>今天 · 09:41</Text></View></View><View className='event'><Text className='dot gold'>•</Text><View><Text>{commitment?.createdBy === 'jack' ? 'Yuki' : 'Jack'}：算数。</Text><Text className='date'>刚刚</Text></View></View>{commitment?.signals.filter(signal => signal.visibility === 'SHARED').map(signal => <View className='event' key={signal.id}><Text className='dot apricot'>•</Text><View><Text>Yuki：还想。</Text><Text className='date'>刚刚</Text></View></View>)}{commitment?.realityAttempts.flatMap(attempt => attempt.events.map((event, index) => <View className='event' key={`${attempt.id}-${index}`}><Text className={event.type === 'FULFILLMENT_CONFIRMED' ? 'dot gold' : 'dot apricot'}>•</Text><View><Text>{realityEventCopy[event.type]}</Text><Text className='date'>刚刚</Text></View></View>))}{commitment?.sharedState === 'LET_GO' && !commitment.realityAttempts.some(attempt => attempt.events.some(event => event.type === 'LET_GO')) && <View className='event'><Text className='dot'>•</Text><View><Text>Yuki：算啦。</Text><Text className='date'>刚刚</Text></View></View>}{commitment?.signals.filter(signal => signal.visibility === 'SELF_ONLY').map(signal => <View className='event' key={signal.id}><Text className='dot apricot'>•</Text><View><Text>只留给你：我还想。</Text><Text className='date'>仅自己可见 · 刚刚</Text></View></View>)}</View>
         {signalFeedback && <Text className='signal-feedback'>{commitment?.sharedState === 'LET_GO' ? '已经只留给你。' : '已经留下：你还想。'}</Text>}
         <View className='spacer' />
         {commitment?.sharedState === 'SHARED' && <><Button className='secondary' onClick={() => wantStill()}>{commitment.signals.some(signal => signal.visibility === 'SHARED') ? '还想 · 已留下' : '还想'}</Button><Button className='primary detail-primary' onClick={startReality}>来真的</Button><Button className='detail-boundary-action' onClick={() => setScreen('letGoConfirm')}>算啦</Button><Text className='preview-label'>“还想”只表达现在的态度，不会移动这句话</Text></>}
@@ -264,6 +282,6 @@ export default function Index() {
         <Text className='eyebrow'>结束这一条共同的以后</Text><Text className='quote'>“{words}”</Text><View className='let-go-copy'><Text className='title'>要算啦吗？</Text><Text className='hint'>它会离开“还在”，留进你们共同的“后来”。这个动作不能在原地撤回。</Text></View><View className='spacer' /><Button className='secondary' onClick={() => setScreen('detail')}>再想想</Button><Button className='let-go-button' onClick={letGo}>算啦</Button>
       </View>}
     </View>
-    <View className='prototype-rail'><Text className='rail-title'>V3 · ALPHA 06</Text><Text>{stepIndex >= 0 ? `${String(stepIndex + 1).padStart(2, '0')} / ${String(goldenSteps.length).padStart(2, '0')}` : screen === 'declined' ? 'PROPOSAL · DECLINED' : screen === 'surfaceMagic' ? 'POOL · M03' : screen === 'sinkMagic' ? 'POOL · M02' : 'V3 · SPACE'}</Text><View className='rail-track'><View className='rail-progress' style={{ height: `${stepIndex >= 0 ? ((stepIndex + 1) / goldenSteps.length) * 100 : 100}%` }} /></View>{commitment?.sharedState === 'SHARED' && commitment.visibilityState === 'SURFACED' && (screen === 'relationship' || screen === 'detail') && <Button className='rail-simulate' onClick={sinkForPrototype}>模拟时间流逝</Button>}<Button className='rail-reset' onClick={resetPrototype}>重新开始</Button></View>
+    <View className='prototype-rail'><Text className='rail-title'>V3 · ALPHA 06</Text><Text>{stepIndex >= 0 ? `${String(stepIndex + 1).padStart(2, '0')} / ${String(goldenSteps.length).padStart(2, '0')}` : screen === 'declined' ? 'PROPOSAL · DECLINED' : screen === 'proposalBlocked' ? 'BOUNDARY · BLOCKED' : screen === 'incomingAnswer' ? 'PROPOSAL · INCOMING' : screen === 'surfaceMagic' ? 'POOL · M03' : screen === 'sinkMagic' ? 'POOL · M02' : 'V3 · SPACE'}</Text><View className='rail-track'><View className='rail-progress' style={{ height: `${stepIndex >= 0 ? ((stepIndex + 1) / goldenSteps.length) * 100 : 100}%` }} /></View>{established && (screen === 'relationship' || screen === 'relationshipSettings') && <Button className='rail-simulate' onClick={simulateIncomingProposal}>模拟 Jack 发来新提议</Button>}{commitment?.sharedState === 'SHARED' && commitment.visibilityState === 'SURFACED' && (screen === 'relationship' || screen === 'detail') && <Button className='rail-simulate' onClick={sinkForPrototype}>模拟时间流逝</Button>}<Button className='rail-reset' onClick={resetPrototype}>重新开始</Button></View>
   </View>
 }
