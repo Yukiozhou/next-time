@@ -5,7 +5,7 @@ import type { Commitment, RealityAttempt, RealityEventType, Relationship } from 
 import { openSharedStates, resolvedSharedStates } from '../../domain/models'
 import './index.scss'
 
-type Screen = 'home' | 'say' | 'context' | 'share' | 'answer' | 'declined' | 'magic' | 'relationship' | 'relationshipSettings' | 'detail' | 'letGoConfirm' | 'realAnswer' | 'fulfillAnswer' | 'pool' | 'sinkMagic' | 'surfaceMagic'
+type Screen = 'later' | 'me' | 'hiddenPeople' | 'notifications' | 'privacy' | 'about' | 'home' | 'say' | 'context' | 'share' | 'answer' | 'declined' | 'magic' | 'relationship' | 'relationshipSettings' | 'detail' | 'letGoConfirm' | 'realAnswer' | 'fulfillAnswer' | 'pool' | 'sinkMagic' | 'surfaceMagic'
 type ContextKey = 'photo' | 'time' | 'place'
 const goldenSteps: Screen[] = ['home', 'say', 'context', 'share', 'answer', 'magic', 'relationship', 'detail']
 const realityEventCopy: Record<RealityEventType, string> = {
@@ -26,10 +26,23 @@ const initialRelationship = (): Relationship => ({ id: 'yuki-jack', people: [{ i
 
 export default function Index() {
   const [screen, setScreen] = useState<Screen>('home')
-  const [words, setWords] = useState('下次一起去看海。')
+  const [draftWords, setWords] = useState('下次一起去看海。')
+  const [recipientLocked, setRecipientLocked] = useState(false)
+  const [detailOrigin, setDetailOrigin] = useState<Screen>('relationship')
   const [context, setContext] = useState<Record<ContextKey, boolean>>(initialContext)
   const [sending, setSending] = useState(false)
-  const [commitment, setCommitment] = useState<Commitment | null>(null)
+  const [commitments, setCommitments] = useState<Commitment[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const commitment = commitments.find(item => item.id === selectedId) ?? null
+  const setCommitment = (next: Commitment | null) => {
+    if (!next) { setCommitments([]); setSelectedId(null); return }
+    setCommitments(current => current.some(item => item.id === next.id)
+      ? current.map(item => item.id === next.id ? next : item)
+      : [...current, next])
+    setSelectedId(next.id)
+  }
+  const composing = ['say', 'context', 'share', 'answer', 'declined'].includes(screen)
+  const words = composing ? draftWords : commitment?.words ?? draftWords
   const [relationship, setRelationship] = useState<Relationship>(initialRelationship)
   const [poolSelected, setPoolSelected] = useState(false)
   const [signalFeedback, setSignalFeedback] = useState(false)
@@ -49,6 +62,7 @@ export default function Index() {
   const resetPrototype = () => {
     clearScheduledTransitions()
     setWords('下次一起去看海。')
+    setRecipientLocked(false)
     setContext(initialContext())
     setSending(false)
     setCommitment(null)
@@ -61,17 +75,16 @@ export default function Index() {
   const toggleContext = (key: ContextKey) => setContext(current => ({ ...current, [key]: !current[key] }))
   const share = async () => {
     setSending(true)
-    const result = await mockShareAdapter.shareProposal({ words, recipient: '微信朋友' })
+    const result = await mockShareAdapter.shareProposal({ words, recipient: recipientLocked ? 'Jack' : '微信朋友' })
     setSending(false)
     if (result.delivered) setScreen('answer')
   }
   const accept = () => {
-    setCommitment({ id: 'commitment-alpha-03', relationshipId: 'yuki-jack', words, createdBy: 'yuki', sharedState: 'SHARED', visibilityState: 'SURFACED', signals: [], realityAttempts: [], createdAt: new Date().toISOString(), sharedAt: new Date().toISOString() })
+    setCommitment({ id: `commitment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, relationshipId: 'yuki-jack', words, createdBy: 'yuki', sharedState: 'SHARED', visibilityState: 'SURFACED', signals: [], realityAttempts: [], createdAt: new Date().toISOString(), sharedAt: new Date().toISOString() })
     setScreen('magic')
     schedule(() => setScreen('relationship'), 2100)
   }
   const decline = () => {
-    setCommitment(null)
     setScreen('declined')
   }
   const sinkForPrototype = () => {
@@ -84,6 +97,7 @@ export default function Index() {
     if (!commitment) return
     setCommitment({ ...commitment, visibilityState: 'SURFACED' })
     setPoolSelected(false)
+    setDetailOrigin('relationship')
     setScreen('surfaceMagic')
     schedule(() => setScreen('detail'), 1600)
   }
@@ -152,7 +166,11 @@ export default function Index() {
   const toggleRelationshipVisibility = () => setRelationship(current => ({ ...current, visibilityByPerson: { ...current.visibilityByPerson, yuki: current.visibilityByPerson.yuki === 'VISIBLE' ? 'HIDDEN' : 'VISIBLE' } }))
   const toggleNewProposals = () => setRelationship(current => ({ ...current, acceptsNewProposalsByPerson: { ...current.acceptsNewProposalsByPerson, yuki: !current.acceptsNewProposalsByPerson.yuki } }))
   const back = () => {
-    if (screen === 'pool' || screen === 'detail') return setScreen('relationship')
+    if (screen === 'detail') return setScreen(detailOrigin)
+    if (screen === 'pool') return setScreen('relationship')
+    if (screen === 'relationship') return setScreen('home')
+    if (['hiddenPeople', 'notifications', 'privacy', 'about'].includes(screen)) return setScreen('me')
+    if (screen === 'say') return setScreen(recipientLocked ? 'relationship' : 'home')
     if (screen === 'relationshipSettings') return setScreen('relationship')
     if (screen === 'letGoConfirm') return setScreen('detail')
     if (screen === 'realAnswer' || screen === 'fulfillAnswer') return setScreen('detail')
@@ -160,21 +178,38 @@ export default function Index() {
     setScreen(goldenSteps[Math.max(0, goldenSteps.indexOf(screen) - 1)])
   }
 
-  const isOpenCommitment = commitment ? openSharedStates.includes(commitment.sharedState) : false
-  const isResolvedCommitment = commitment ? resolvedSharedStates.includes(commitment.sharedState) : false
+  const established = commitments.length > 0
+  const hidden = relationship.visibilityByPerson.yuki === 'HIDDEN'
+  const surfaced = commitments.filter(item => openSharedStates.includes(item.sharedState) && item.visibilityState === 'SURFACED')
+  const sunk = commitments.filter(item => item.visibilityState === 'SUNK')
+  const later = commitments.filter(item => resolvedSharedStates.includes(item.sharedState))
+    .sort((a, b) => (b.resolvedAt ?? b.createdAt).localeCompare(a.resolvedAt ?? a.createdAt))
+  const latest = commitments[commitments.length - 1]
+  const statusCopy = (item: Commitment) => item.sharedState === 'FULFILLED' ? '我们兑现了。' : item.sharedState === 'LET_GO' ? '我们算啦。' : item.sharedState === 'REAL' ? '正在来真的。' : item.sharedState === 'REAL_PENDING' ? '等 Jack 回应“来真的”。' : item.sharedState === 'FULFILLED_PENDING' ? '等 Jack 确认兑现。' : item.visibilityState === 'SUNK' ? '这句话在池里。' : item.signals.some(signal => signal.visibility === 'SHARED') ? 'Yuki：还想。' : '我们说好了'
+  const openDetail = (item: Commitment, origin: Screen = 'relationship') => { setSelectedId(item.id); setDetailOrigin(origin); setScreen('detail') }
+  const startProposal = (locked: boolean) => { setRecipientLocked(locked); setWords(''); setContext(initialContext()); setScreen('say') }
+  const row = (item: Commitment, origin: Screen = 'relationship') => <Button key={item.id} className='commitment-row' onClick={() => openDetail(item, origin)}><BrandStar className='commitment-star' /><View className='commitment-copy'><Text className='commitment-words'>{item.words}</Text><Text className='commitment-status'>{statusCopy(item)} · {new Date(item.resolvedAt ?? item.createdAt).toLocaleDateString('zh-CN')}</Text></View><Text className='chevron'>›</Text></Button>
+  const navigation = <View className='nav'>{([['home', '我们'], ['later', '后来'], ['me', '我']] as const).map(([target, label]) => <Button key={target} className={screen === target ? 'nav-item active' : 'nav-item'} onClick={() => setScreen(target)} aria-label={label}>{label}</Button>)}</View>
 
   return <View className='shell'>
     <View className='phone'>
       <View className='statusbar'><Text>9:41</Text><Text className='status-icons'>● ◒</Text></View>
-      {!['home', 'magic', 'sinkMagic', 'surfaceMagic'].includes(screen) && <View className='topbar'><Button className='icon-button' onClick={back} aria-label='返回'>‹</Button><Text className='wordmark'>下次一定</Text><View className='topbar-spacer' /></View>}
+      {!['home', 'later', 'me', 'magic', 'sinkMagic', 'surfaceMagic'].includes(screen) && <View className='topbar'><Button className='icon-button' onClick={back} aria-label='返回'>‹</Button><Text className='wordmark'>下次一定</Text><View className='topbar-spacer' /></View>}
 
-      {screen === 'home' && <View className='screen home'><View className='home-copy'><Text className='display'>我们</Text><Text className='lead'>那些说过的以后，{`\n`}会从这里开始。</Text></View><WishingFountain className='home-fountain' /><Button className='primary' onClick={() => setScreen('say')}>说一个下次</Button><View className='nav'><Text className='active'>我们</Text><Text>后来</Text><Text>我</Text></View></View>}
+      {screen === 'home' && <View className={established ? 'screen home home-connected' : 'screen home'}><View className='home-copy'><Text className='display'>我们</Text><Text className='lead'>{established ? '那些说过的以后，留在我们之间。' : '那些说过的以后，\n会从这里开始。'}</Text></View>{established && !hidden && latest && <Button className='person-row' onClick={() => setScreen('relationship')}><Text className='person-name'>Jack</Text><Text className='person-words'>{latest.words}</Text><Text className='hint'>{statusCopy(latest)}　›</Text></Button>}{established && hidden && <Text className='hint'>这里暂时很安静。已收起的人可以在“我”里找到。</Text>}<WishingFountain className='home-fountain' /><Button className='primary' onClick={() => startProposal(false)}>{established ? '＋ 说一个下次' : '说一个下次'}</Button>{navigation}</View>}
+
+      {screen === 'later' && <View className='screen global-screen'><Text className='title'>后来</Text><Text className='hint'>那些已经有了去处的话。</Text><View className='continuity-list'>{!hidden && later.length ? later.map(item => row(item, 'later')) : <Text className='section-empty'>这里还没有展开的后来。</Text>}</View>{navigation}</View>}
+      {screen === 'me' && <View className='screen global-screen'><Text className='title'>我</Text><Text className='hint'>Yuki</Text><View className='continuity-list'>{([['hiddenPeople', '已收起的人'], ['notifications', '通知与提醒'], ['privacy', '隐私与关系设置'], ['about', '关于下次一定']] as const).map(([target, label]) => <Button key={target} className='menu-row' onClick={() => setScreen(target)}>{label}<Text>›</Text></Button>)}</View>{navigation}</View>}
+      {screen === 'hiddenPeople' && <View className='screen'><Text className='title'>已收起的人</Text>{established && hidden ? <><Button className='menu-row' onClick={() => setScreen('relationship')}>Jack<Text>查看历史 ›</Text></Button><Button className='secondary' onClick={toggleRelationshipVisibility}>重新显示在首页</Button></> : <Text className='hint'>没有已收起的人。</Text>}</View>}
+      {screen === 'notifications' && <View className='screen'><Text className='title'>通知与提醒</Text><Text className='hint'>当前为本地测试原型，尚未接入微信通知或定时提醒。</Text></View>}
+      {screen === 'privacy' && <View className='screen'><Text className='title'>隐私与关系设置</Text><Text className='hint'>收起关系与拒收新提议彼此独立。共同历史不会因此删除。</Text>{established && <Button className='menu-row' onClick={() => setScreen('relationshipSettings')}>我和 Jack<Text>管理 ›</Text></Button>}</View>}
+      {screen === 'about' && <View className='screen'><Text className='title'>下次一定</Text><Text className='hint'>保存两个人之间那些“以后”。</Text><Text className='hint'>测试内容仅存在本次页面会话，刷新会重置。请勿填写敏感的真实关系内容。</Text></View>}
 
       {screen === 'say' && <View className='screen form-screen'><Text className='eyebrow'>原话</Text><Text className='title'>说一个下次</Text><Text className='hint'>就写下你真正想对 TA 说的那句话。</Text><View className='field big'><Textarea maxlength={60} value={words} onInput={event => setWords(event.detail.value)} /></View><Text className='counter'>{words.length} / 60</Text><View className='spacer' /><Button className='primary' disabled={!words.trim()} onClick={() => setScreen('context')}>继续</Button></View>}
 
       {screen === 'context' && <View className='screen form-screen'><Text className='eyebrow'>可选补充</Text><Text className='title'>还想多留一点吗？</Text><Text className='hint'>这些只是帮助 TA 理解，不会改变你们要说算数的原话。</Text><View className='context-list'>{([['photo', '一张图片', '已选一张'], ['time', '大概什么时候', '天气暖一点'], ['place', '大概在哪里', '海边']] as const).map(([key, label, value]) => <Button key={key} className={context[key] ? 'context-row selected' : 'context-row'} onClick={() => toggleContext(key)}><Text>＋ {label}</Text><Text>{context[key] ? value : '可选'}</Text></Button>)}</View><View className='spacer' /><Button className='primary' onClick={() => setScreen('share')}>{Object.values(context).some(Boolean) ? '带上这些' : '跳过'}</Button></View>}
 
-      {screen === 'share' && <View className='screen share-screen'><Text className='eyebrow'>说给谁听？</Text><Text className='share-quote'>{words}</Text><Text className='hint'>发给那个你想到的人。</Text><View className='wechat-card'><View className='share-wash' /><BrandStar className='outline-star share-star' /><Text className='card-kicker'>Yuki 说了一个下次</Text><Text className='card-quote'>“{words}”</Text><Text className='waiting-copy'>等你说算数。</Text><View className='card-footer'><Text>下次一定</Text><Text>打开看看 ›</Text></View></View><View className='spacer' /><Button className='wechat' loading={sending} onClick={share}>{sending ? '正在打开微信' : '发给微信朋友'}</Button></View>}
+      {screen === 'share' && <View className='screen share-screen'><Text className='eyebrow'>{recipientLocked ? '说给 Jack 听' : '说给谁听？'}</Text><Text className='share-quote'>{words}</Text><Text className='hint'>{recipientLocked ? '再留一句话，给 Jack。' : '发给那个你想到的人。'}</Text><View className='wechat-card'><View className='share-wash' /><BrandStar className='outline-star share-star' /><Text className='card-kicker'>Yuki 说了一个下次</Text><Text className='card-quote'>“{words}”</Text><Text className='waiting-copy'>等你说算数。</Text><View className='card-footer'><Text>下次一定</Text><Text>打开看看 ›</Text></View></View><View className='spacer' /><Button className='wechat' loading={sending} onClick={share}>{sending ? '正在打开微信' : recipientLocked ? '发给 Jack' : '发给微信朋友'}</Button></View>}
 
       {screen === 'answer' && <View className='screen answer-screen'><Text className='eyebrow'>Yuki 说了一个下次</Text><Text className='quote'>“{words}”</Text>{(context.time || context.place) && <View className='context-preview'>{context.time && <Text>大概：天气暖一点</Text>}{context.place && <Text>地点：海边</Text>}</View>}<View className='answer-copy'><Text className='title'>算数吗？</Text></View><View className='spacer' /><Button className='primary' onClick={accept}>算数</Button><Button className='text-button' onClick={decline}>这次不算</Button></View>}
 
@@ -194,10 +229,10 @@ export default function Index() {
         <Text className='hint'>这里留着一些我们说过的话。</Text>
         {relationship.visibilityByPerson.yuki === 'HIDDEN' && <Text className='boundary-banner'>这段关系已从你的首页收起，历史仍然留在这里。</Text>}
         {!relationship.acceptsNewProposalsByPerson.yuki && <Text className='boundary-banner'>你目前不接收 Jack 新的“下次”。</Text>}
-        <View className='relationship-section'><Text className='section-label'>还在</Text>{isOpenCommitment && commitment?.visibilityState === 'SURFACED' ? <Button className='commitment-row' onClick={() => setScreen('detail')}><BrandStar className='commitment-star' /><View className='commitment-copy'><Text className='commitment-words'>{words}</Text><Text className='commitment-status'>{commitment.sharedState === 'REAL' ? '正在来真的。' : commitment.sharedState === 'REAL_PENDING' ? '等 Jack 回应“来真的”。' : commitment.sharedState === 'FULFILLED_PENDING' ? '等 Jack 确认兑现。' : commitment.signals.length ? 'Yuki：还想。' : '我们说好了 · 刚刚'}</Text></View><Text className='chevron'>›</Text></Button> : <Text className='section-empty'>现在没有等着发生的以后。</Text>}</View>
-        <Button className='pool-entry' aria-label='看看池底' onClick={() => setScreen('pool')}><View className='pool-window'><WishingFountain className='relationship-fountain' />{commitment?.visibilityState === 'SUNK' && <BrandStar className='pool-window-star' />}</View><Text className='pool-entry-link'>看看池底 →</Text></Button>
-        <View className='relationship-section later-section'><Text className='section-label'>后来</Text>{isResolvedCommitment ? <Button className='commitment-row later-row' onClick={() => setScreen('detail')}><BrandStar className='commitment-star' /><View className='commitment-copy'><Text className='commitment-words'>{words}</Text><Text className='commitment-status'>{commitment?.sharedState === 'FULFILLED' ? '我们兑现了。' : commitment?.sharedState === 'LET_GO' ? '我们算啦。' : '这句话有了后来。'}</Text></View><Text className='chevron'>›</Text></Button> : <Text className='section-empty'>这里还没有后来。</Text>}</View>
-        <View className='spacer' /><Button className='secondary' onClick={() => setScreen('say')}>再说一个下次</Button>
+        <View className='relationship-section'><Text className='section-label'>还在</Text>{surfaced.length ? surfaced.map(item => row(item)) : <Text className='section-empty'>现在没有等着发生的以后。</Text>}</View>
+        <Button className='pool-entry' aria-label='看看池底' onClick={() => { setPoolSelected(false); setScreen('pool') }}><View className='pool-window'><WishingFountain className='relationship-fountain' />{sunk.length > 0 && <BrandStar className='pool-window-star' />}</View><Text className='pool-entry-link'>看看池底 →</Text></Button>
+        <View className='relationship-section later-section'><Text className='section-label'>后来</Text>{later.length ? later.map(item => row(item)) : <Text className='section-empty'>这里还没有后来。</Text>}</View>
+        <View className='spacer' /><Button className='secondary' onClick={() => startProposal(true)}>再说一个下次</Button>
       </View>}
 
       {screen === 'relationshipSettings' && <View className='screen boundary-screen'>
@@ -209,7 +244,7 @@ export default function Index() {
         <View className='spacer' /><Text className='boundary-footnote'>收起关系不等于算啦；拒收新提议也不会结束任何一条已经算数的话。</Text>
       </View>}
 
-      {screen === 'pool' && <View className='screen pool-screen'><Text className='eyebrow'>我和 Jack</Text><Text className='title'>池</Text><Text className='hint'>有些以后，只是暂时沉到了时间里。</Text><View className={poolSelected ? 'spatial-pool has-selection' : 'spatial-pool'}><View className='pool-fountain-visual' aria-hidden='true' />{commitment?.visibilityState === 'SUNK' && <Button className='pool-star-button' aria-label='查看沉下去的那句话' onClick={() => setPoolSelected(true)}><BrandStar className='real-star' /></Button>}{poolSelected && <><View className='pool-selection-fog' /><View className='pool-selection'><Text className='selected-words'>{words}</Text><Text className='selected-meta'>这句话一直都在。</Text><Button className='lift-button' onClick={liftFromPool}>捞起来</Button><Button className='look-button' onClick={() => setPoolSelected(false)}>再看看</Button></View></>}{commitment?.visibilityState !== 'SUNK' && <Text className='pool-empty-copy'>池里现在很安静。{`\n`}还没有什么沉到这里。</Text>}</View></View>}
+      {screen === 'pool' && <View className='screen pool-screen'><Text className='eyebrow'>我和 Jack</Text><Text className='title'>池</Text><Text className='hint'>有些以后，只是暂时沉到了时间里。</Text><View className={poolSelected ? 'spatial-pool has-selection' : 'spatial-pool'}><View className='pool-fountain-visual' aria-hidden='true' />{sunk.map((item, index) => <Button key={item.id} className={poolSelected && selectedId === item.id ? 'pool-star-button selected-pool-star' : 'pool-star-button'} style={{ left: `${18 + (index % 3) * 27}%`, top: `${28 + Math.floor(index / 3) * 17}%` }} aria-label={`查看：${item.words}`} onClick={() => { setSelectedId(item.id); setPoolSelected(true) }}><BrandStar className='real-star' /></Button>)}{poolSelected && <><View className='pool-selection-fog' /><View className='pool-selection'><Text className='selected-words'>{words}</Text><Text className='selected-meta'>这句话一直都在。</Text><Button className='lift-button' onClick={liftFromPool}>捞起来</Button><Button className='look-button' onClick={() => setPoolSelected(false)}>再看看</Button></View></>}{sunk.length === 0 && <Text className='pool-empty-copy'>池里现在很安静。{`\n`}还没有什么沉到这里。</Text>}</View></View>}
 
       {screen === 'detail' && <View className='screen detail'>
         <View className='detail-heading'><Text className='eyebrow'>{commitment?.sharedState === 'REAL' ? '正在来真的' : commitment?.sharedState === 'FULFILLED' ? '已经兑现' : commitment?.sharedState === 'LET_GO' ? '已经算啦' : '我们说好的'}</Text>{(commitment?.sharedState === 'FULFILLED' || commitment?.sharedState === 'LET_GO') && <Text className='state-chip'>后来</Text>}</View>
@@ -229,6 +264,6 @@ export default function Index() {
         <Text className='eyebrow'>结束这一条共同的以后</Text><Text className='quote'>“{words}”</Text><View className='let-go-copy'><Text className='title'>要算啦吗？</Text><Text className='hint'>它会离开“还在”，留进你们共同的“后来”。这个动作不能在原地撤回。</Text></View><View className='spacer' /><Button className='secondary' onClick={() => setScreen('detail')}>再想想</Button><Button className='let-go-button' onClick={letGo}>算啦</Button>
       </View>}
     </View>
-    <View className='prototype-rail'><Text className='rail-title'>V3 · ALPHA 05</Text><Text>{stepIndex >= 0 ? `${String(stepIndex + 1).padStart(2, '0')} / ${String(goldenSteps.length).padStart(2, '0')}` : screen === 'declined' ? 'PROPOSAL · DECLINED' : screen === 'surfaceMagic' ? 'POOL · M03' : screen === 'sinkMagic' ? 'POOL · M02' : 'V3 · SPACE'}</Text><View className='rail-track'><View className='rail-progress' style={{ height: `${stepIndex >= 0 ? ((stepIndex + 1) / goldenSteps.length) * 100 : 100}%` }} /></View>{commitment?.sharedState === 'SHARED' && commitment.visibilityState === 'SURFACED' && (screen === 'relationship' || screen === 'detail') && <Button className='rail-simulate' onClick={sinkForPrototype}>模拟时间流逝</Button>}<Button className='rail-reset' onClick={resetPrototype}>重新开始</Button></View>
+    <View className='prototype-rail'><Text className='rail-title'>V3 · ALPHA 06</Text><Text>{stepIndex >= 0 ? `${String(stepIndex + 1).padStart(2, '0')} / ${String(goldenSteps.length).padStart(2, '0')}` : screen === 'declined' ? 'PROPOSAL · DECLINED' : screen === 'surfaceMagic' ? 'POOL · M03' : screen === 'sinkMagic' ? 'POOL · M02' : 'V3 · SPACE'}</Text><View className='rail-track'><View className='rail-progress' style={{ height: `${stepIndex >= 0 ? ((stepIndex + 1) / goldenSteps.length) * 100 : 100}%` }} /></View>{commitment?.sharedState === 'SHARED' && commitment.visibilityState === 'SURFACED' && (screen === 'relationship' || screen === 'detail') && <Button className='rail-simulate' onClick={sinkForPrototype}>模拟时间流逝</Button>}<Button className='rail-reset' onClick={resetPrototype}>重新开始</Button></View>
   </View>
 }
