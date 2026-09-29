@@ -26,7 +26,7 @@ jobs:
       - name: Check out frozen Alpha 06.1 source
         uses: actions/checkout@v4
         with:
-          ref: de26c962fe16d83a5e24cd31ba2f5c59d3a83359
+          ref: e0a6e183920d7daec945c065b3d41abb59c7dcd9
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
