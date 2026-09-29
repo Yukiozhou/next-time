@@ -26,7 +26,9 @@ const initialRelationship = (): Relationship => ({ id: 'yuki-jack', people: [{ i
 const incomingProposalWords = '下次一起去看一场日落。'
 
 export default function Index() {
+  const pilotMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('pilot') === '1'
   const [screen, setScreen] = useState<Screen>('home')
+  const [pilotToolsOpen, setPilotToolsOpen] = useState(false)
   const [draftWords, setWords] = useState('下次一起去看海。')
   const [recipientLocked, setRecipientLocked] = useState(false)
   const [detailOrigin, setDetailOrigin] = useState<Screen>('relationship')
@@ -283,5 +285,14 @@ export default function Index() {
       </View>}
     </View>
     <View className='prototype-rail'><Text className='rail-title'>V3 · ALPHA 06</Text><Text>{stepIndex >= 0 ? `${String(stepIndex + 1).padStart(2, '0')} / ${String(goldenSteps.length).padStart(2, '0')}` : screen === 'declined' ? 'PROPOSAL · DECLINED' : screen === 'proposalBlocked' ? 'BOUNDARY · BLOCKED' : screen === 'incomingAnswer' ? 'PROPOSAL · INCOMING' : screen === 'surfaceMagic' ? 'POOL · M03' : screen === 'sinkMagic' ? 'POOL · M02' : 'V3 · SPACE'}</Text><View className='rail-track'><View className='rail-progress' style={{ height: `${stepIndex >= 0 ? ((stepIndex + 1) / goldenSteps.length) * 100 : 100}%` }} /></View>{established && (screen === 'relationship' || screen === 'relationshipSettings') && <Button className='rail-simulate' onClick={simulateIncomingProposal}>模拟 Jack 发来新提议</Button>}{commitment?.sharedState === 'SHARED' && commitment.visibilityState === 'SURFACED' && (screen === 'relationship' || screen === 'detail') && <Button className='rail-simulate' onClick={sinkForPrototype}>模拟时间流逝</Button>}<Button className='rail-reset' onClick={resetPrototype}>重新开始</Button></View>
+    {pilotMode && <View className={pilotToolsOpen ? 'pilot-tools open' : 'pilot-tools'}>
+      <Button className='pilot-tools-toggle' aria-label='主持人测试工具' aria-expanded={pilotToolsOpen} onClick={() => setPilotToolsOpen(open => !open)}>{pilotToolsOpen ? '收起' : '测试'}</Button>
+      {pilotToolsOpen && <View className='pilot-tools-panel'>
+        <Text className='pilot-tools-label'>MODERATOR</Text>
+        <Button className='pilot-tool-action' onClick={resetPrototype}>重新开始</Button>
+        <Button className='pilot-tool-action' disabled={!commitment || commitment.sharedState !== 'SHARED' || commitment.visibilityState !== 'SURFACED'} onClick={sinkForPrototype}>模拟时间流逝</Button>
+        <Button className='pilot-tool-action' disabled={!established} onClick={simulateIncomingProposal}>模拟 Jack 发来新提议</Button>
+      </View>}
+    </View>}
   </View>
 }
